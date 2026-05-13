@@ -25,6 +25,9 @@ export function SetupProfile() {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
       const res = await fetch(`${backendUrl}/api/upload`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
         body: formData,
       });
       const data = await res.json();

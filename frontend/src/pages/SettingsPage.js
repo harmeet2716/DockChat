@@ -3,19 +3,27 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { 
   Bell, Shield, Moon, LogOut, ArrowLeft, 
-  Camera, Check, Trash2, ChevronRight, Globe, HelpCircle 
+  Camera, Check, Trash2, ChevronRight, Globe, HelpCircle,
+  Pencil, X, Save, User, Info, Phone
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SettingsPage = () => {
   const { user, logout, updateProfile } = useContext(AuthContext);
-  const [name, setName] = useState(user?.name || "");
-  const [about, setAbout] = useState(user?.about || "Hey there! I'm using DockChat.");
-  const [isSaved, setIsSaved] = useState(false);
+  const [editingField, setEditingField] = useState(null); // 'name' | 'about'
+  const [tempValue, setTempValue] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleEditClick = (field, currentValue) => {
+    setEditingField(field);
+    setTempValue(currentValue);
+  };
 
   const handleSave = async () => {
-    await updateProfile({ name, about });
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+    setLoading(true);
+    await updateProfile({ [editingField]: tempValue });
+    setLoading(false);
+    setEditingField(null);
   };
 
   const menuItems = [
@@ -27,60 +35,77 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] text-[#111b21] p-6 md:p-12 font-sans selection:bg-[#25D366]/30">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <header className="flex items-center gap-4 mb-10">
-          <Link to="/dashboard" className="p-2 hover:bg-black/5 rounded-full transition text-[#075E54]">
+    <div className="min-h-screen bg-[#f0f2f5] text-[#111b21] font-sans selection:bg-[#25D366]/30">
+      {/* Header */}
+      <header className="bg-[#075E54] text-white p-6 pb-20 sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto flex items-center gap-4">
+          <Link to="/dashboard" className="p-2 hover:bg-white/10 rounded-full transition">
             <ArrowLeft size={24} />
           </Link>
-          <h1 className="text-2xl font-bold">Settings</h1>
-        </header>
+          <h1 className="text-xl font-bold">Profile</h1>
+        </div>
+      </header>
 
+      <div className="max-w-2xl mx-auto -mt-16 px-6 relative z-30 pb-20">
+        {/* Profile Info Section */}
         <div className="space-y-6">
-          {/* Profile Card */}
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-black/[0.03] relative overflow-hidden group">
-            <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-              <div className="relative group/avatar">
-                <div className="w-24 h-24 rounded-full bg-[#f0f2f5] border border-black/[0.05] flex items-center justify-center text-3xl font-bold text-[#075E54] shadow-inner overflow-hidden">
-                  {user?.profilePic ? (
-                    <img src={user.profilePic} alt="profile" className="w-full h-full object-cover" />
-                  ) : (
-                    (user?.name?.[0] || "?").toUpperCase()
-                  )}
-                </div>
-                <button className="absolute bottom-0 right-0 p-2 bg-[#25D366] text-white rounded-full shadow-md hover:scale-110 active:scale-95 transition-all">
-                  <Camera size={16} />
-                </button>
+          {/* Large Profile Picture */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative group/avatar">
+              <div className="w-40 h-40 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center text-5xl font-bold text-[#075E54] overflow-hidden">
+                {user?.profilePic ? (
+                  <img src={user.profilePic} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  (user?.name?.[0] || "?").toUpperCase()
+                )}
               </div>
+              <label className="absolute bottom-1 right-1 p-3 bg-[#25D366] text-white rounded-full shadow-lg cursor-pointer hover:scale-110 active:scale-95 transition-all">
+                <Camera size={24} />
+                <input type="file" className="hidden" />
+              </label>
+            </div>
+          </div>
 
-              <div className="flex-1 space-y-4 w-full text-center md:text-left">
-                <div className="space-y-1">
-                  <input 
-                    type="text" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your Name"
-                    className="bg-transparent text-xl font-bold border-none focus:ring-0 p-0 w-full text-center md:text-left text-[#111b21] placeholder:text-slate-300"
-                  />
-                  <input 
-                    type="text" 
-                    value={about}
-                    onChange={(e) => setAbout(e.target.value)}
-                    placeholder="Status"
-                    className="bg-transparent text-sm text-[#54656f] border-none focus:ring-0 p-0 w-full text-center md:text-left"
-                  />
+          {/* WhatsApp Style Rows */}
+          <section className="bg-white rounded-2xl shadow-sm border border-black/[0.03] overflow-hidden divide-y divide-black/[0.03]">
+            {/* Name Row */}
+            <button 
+              onClick={() => handleEditClick('name', user?.name)}
+              className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors group text-left"
+            >
+              <div className="flex items-start gap-6">
+                <User className="text-[#075E54] mt-1" size={20} />
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Name</label>
+                  <p className="text-base font-semibold text-[#111b21]">{user?.name || "No name set"}</p>
                 </div>
-                <button 
-                  onClick={handleSave}
-                  className={`px-6 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 mx-auto md:mx-0 shadow-sm ${
-                    isSaved 
-                      ? "bg-[#075E54] text-white" 
-                      : "bg-[#25D366] text-white hover:bg-[#128C7E]"
-                  }`}
-                >
-                  {isSaved ? <><Check size={16} /> Updated</> : "Save Changes"}
-                </button>
+              </div>
+              <Pencil size={18} className="text-slate-300 group-hover:text-[#25D366] transition-colors" />
+            </button>
+
+            {/* About Row */}
+            <button 
+              onClick={() => handleEditClick('about', user?.about)}
+              className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors group text-left"
+            >
+              <div className="flex items-start gap-6">
+                <Info className="text-[#075E54] mt-1" size={20} />
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">About</label>
+                  <p className="text-sm text-[#54656f]">{user?.about || "Available"}</p>
+                </div>
+              </div>
+              <Pencil size={18} className="text-slate-300 group-hover:text-[#25D366] transition-colors" />
+            </button>
+
+            {/* Phone Row (Read Only) */}
+            <div className="w-full flex items-center justify-between p-6 text-left opacity-60">
+              <div className="flex items-start gap-6">
+                <Phone className="text-[#075E54] mt-1" size={20} />
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Phone Number</label>
+                  <p className="text-sm font-semibold text-[#111b21]">{user?.phoneNumber}</p>
+                </div>
               </div>
             </div>
           </section>
@@ -106,32 +131,84 @@ const SettingsPage = () => {
             ))}
           </section>
 
-          {/* Danger Zone */}
-          <section className="space-y-3">
-            <button 
-              onClick={() => logout()}
-              className="w-full flex items-center gap-4 p-5 rounded-2xl bg-rose-50 border border-rose-100 hover:bg-rose-100 transition-all text-rose-500 font-bold group"
-            >
-              <div className="p-2.5 rounded-full bg-white text-rose-500 shadow-sm">
-                <LogOut size={20} />
-              </div>
-              <span className="text-xs uppercase tracking-widest">Logout Session</span>
-            </button>
-            <button className="w-full flex items-center gap-4 p-5 rounded-2xl bg-slate-100 border border-black/[0.02] hover:bg-slate-200 transition-all text-slate-400 font-bold group">
-              <div className="p-2.5 rounded-full bg-white text-slate-400 shadow-sm">
-                <Trash2 size={20} />
-              </div>
-              <span className="text-xs uppercase tracking-widest">Delete Account</span>
-            </button>
-          </section>
-
-          <footer className="text-center py-10">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-300">DockChat v2.1.0 • WhatsApp Edition</p>
-          </footer>
+          {/* Logout Section */}
+          <button 
+            onClick={() => logout()}
+            className="w-full flex items-center justify-center gap-3 p-5 rounded-2xl bg-white border border-rose-100 hover:bg-rose-50 transition-all text-rose-500 font-bold shadow-sm"
+          >
+            <LogOut size={20} />
+            <span className="text-xs uppercase tracking-widest">Logout Session</span>
+          </button>
         </div>
       </div>
+
+      {/* Edit Pop-up Overlay */}
+      <AnimatePresence>
+        {editingField && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingField(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-white rounded-t-[2rem] sm:rounded-2xl p-8 shadow-2xl z-50"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xl font-bold capitalize">Edit {editingField}</h3>
+                <button onClick={() => setEditingField(null)} className="p-2 hover:bg-slate-100 rounded-full transition">
+                  <X size={24} className="text-slate-400" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="relative group">
+                  <input 
+                    type="text" 
+                    value={tempValue}
+                    onChange={(e) => setTempValue(e.target.value)}
+                    autoFocus
+                    className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 text-slate-900 font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition-all"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs">
+                    {tempValue.length}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setEditingField(null)}
+                    className="flex-1 py-4 px-6 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSave}
+                    disabled={loading || !tempValue.trim()}
+                    className="flex-1 py-4 px-6 rounded-xl bg-[#25D366] text-white font-bold shadow-lg shadow-[#25D366]/20 hover:bg-[#128C7E] transition-all flex items-center justify-center gap-2"
+                  >
+                    {loading ? <RefreshCw className="animate-spin" size={20} /> : <><Save size={20} /> Save</>}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
+
+const RefreshCw = ({ className, size }) => (
+  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+    <Save size={size} className={className} />
+  </motion.div>
+);
 
 export default SettingsPage;
