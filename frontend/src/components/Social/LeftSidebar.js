@@ -35,7 +35,8 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
 
   const handleAccessChat = async (targetUserId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/chat`, {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
