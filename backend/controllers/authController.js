@@ -71,7 +71,8 @@ const registerUser = async (req, res) => {
       message: "Registration successful"
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ REGISTER ERROR:", error);
+    res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
 
@@ -106,7 +107,8 @@ const loginUser = async (req, res) => {
       res.status(401).json({ message: `Invalid ${isEmail ? 'email' : 'phone number'} or password` });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ LOGIN ERROR:", error);
+    res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
 

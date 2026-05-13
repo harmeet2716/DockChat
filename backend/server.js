@@ -63,6 +63,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Health check
 app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("🔥 GLOBAL ERROR:", err.stack);
+  res.status(500).json({ 
+    message: "Internal Server Error", 
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
 // MongoDB connection with retry logic
 const connectWithRetry = () => {
   console.log("⏳ Attempting MongoDB connection...");

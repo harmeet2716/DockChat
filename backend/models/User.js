@@ -52,7 +52,7 @@ UserSchema.pre("save", async function (next) {
   }
 
   // Phone number hashing (SHA-256) for privacy-safe matching
-  if (this.isModified("phoneNumber")) {
+  if (this.isModified("phoneNumber") && this.phoneNumber) {
     const crypto = require("crypto");
     this.phoneHash = crypto.createHash("sha256").update(this.phoneNumber).digest("hex");
   }
