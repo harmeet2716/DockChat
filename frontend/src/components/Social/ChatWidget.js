@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Smile, Paperclip, Mic, Send, 
   MoreVertical, Phone, Video, Search,
-  Check, CheckCheck
+  Check, CheckCheck, ChevronLeft, Info, MessageCircle
 } from "lucide-react";
 
-export const ChatWidget = () => {
+export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
   const { user } = useContext(AuthContext);
-  const { selectedChat, messages, sendMessage, socket, socketConnected, isTyping } = useContext(ChatContext);
+  const { selectedChat, messages, sendMessage, isTyping } = useContext(ChatContext);
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -18,7 +18,7 @@ export const ChatWidget = () => {
     if (!chat) return "";
     if (chat.isGroupChat) return chat.chatName;
     const otherUser = chat.users.find(u => u._id !== user._id);
-    return otherUser ? otherUser.name : "Unknown";
+    return otherUser ? otherUser.name : "User";
   };
 
   const getChatProfile = (chat) => {
@@ -34,7 +34,7 @@ export const ChatWidget = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [selectedChat]);
+  }, [selectedChat, messages]);
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#efe7dd] relative">
@@ -42,23 +42,27 @@ export const ChatWidget = () => {
       <div className="absolute inset-0 bg-whatsapp-pattern opacity-[0.06] pointer-events-none"></div>
 
       {/* Active Chat Header */}
-      <header className="flex-shrink-0 h-16 bg-[#f0f2f5] border-b border-black/[0.05] flex items-center justify-between px-4 z-10">
-        <div className="flex items-center gap-3 cursor-pointer">
-          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-[#075E54] border border-black/[0.05]">
+      <header className="flex-shrink-0 h-16 bg-[#f0f2f5] border-b border-black/[0.05] flex items-center justify-between px-4 z-10 shadow-sm">
+        <div className="flex items-center gap-3 cursor-pointer overflow-hidden">
+          {isMobile && (
+            <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:bg-black/5 rounded-full transition">
+              <ChevronLeft size={24} />
+            </button>
+          )}
+          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-[#075E54] border border-black/[0.05] shrink-0">
             {getChatProfile(selectedChat)}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0" onClick={isMobile ? onShowInfo : undefined}>
             <h3 className="text-sm font-bold text-slate-900 truncate">{getChatName(selectedChat)}</h3>
             <p className="text-[10px] text-[#25D366] font-bold uppercase tracking-widest">
               {isTyping ? "typing..." : "online"}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Video size={20} /></button>
-          <button className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Phone size={18} /></button>
-          <div className="w-[1px] h-6 bg-black/10 mx-1"></div>
-          <button className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Search size={20} /></button>
+        <div className="flex items-center gap-1">
+          <button className="hidden sm:block p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Video size={20} /></button>
+          <button className="hidden sm:block p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Phone size={18} /></button>
+          <button onClick={onShowInfo} className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Info size={20} /></button>
           <button className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><MoreVertical size={20} /></button>
         </div>
       </header>
@@ -69,9 +73,19 @@ export const ChatWidget = () => {
           <div className="flex-1 flex items-center justify-center text-slate-400">
             Select a chat to start messaging
           </div>
+        ) : messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
+              <MessageCircle size={32} className="text-[#25D366]/40" />
+            </div>
+            <p className="text-sm font-medium text-slate-600 mb-1">
+              This is the start of your conversation with <span className="text-[#075E54] font-bold">{getChatName(selectedChat)}</span>
+            </p>
+            <p className="text-xs">Say hi to start chatting!</p>
+          </div>
         ) : (
           messages.map((msg) => {
-            const isSentByMe = msg.sender._id === user._id;
+            const isSentByMe = msg.sender?._id === user._id;
             return (
               <motion.div
                 key={msg._id}

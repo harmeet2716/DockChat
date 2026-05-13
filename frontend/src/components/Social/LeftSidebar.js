@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { motion } from "framer-motion";
@@ -10,7 +10,47 @@ import {
 
 export const LeftSidebar = ({ activeTab, onSelectChat }) => {
   const { user } = useContext(AuthContext);
-  const { chats, selectedChat, setSelectedChat } = useContext(ChatContext);
+  const { 
+    chats, selectedChat, setSelectedChat, 
+    searchGlobalUser, searchResult, setSearchResult 
+  } = useContext(ChatContext);
+  const [query, setQuery] = useState("");
+
+  const handleSelect = (chat) => {
+    setSelectedChat(chat);
+    if (onSelectChat) onSelectChat(chat);
+  };
+
+  // Debounced Search Effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.length >= 3) {
+        searchGlobalUser(query);
+      } else {
+        setSearchResult(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const handleAccessChat = async (targetUserId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ userId: targetUserId }),
+      });
+      const data = await res.json();
+      setSelectedChat(data);
+      setSearchResult(null);
+      setQuery("");
+    } catch (err) {
+      console.error("Error accessing chat:", err);
+    }
+  };
 
   const getChatName = (chat) => {
     if (chat.isGroupChat) return chat.chatName;
@@ -39,20 +79,53 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#075E54] transition" size={16} />
           <input 
             type="text" 
-            placeholder={activeTab === "chats" ? "Search or start new chat" : "Search mail"} 
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={activeTab === "chats" ? "Search phone number..." : "Search mail"} 
             className="w-full bg-[#f0f2f5] border-none rounded-lg py-2 pl-10 pr-4 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#075E54]/20 transition"
           />
         </div>
       </div>
+
+      {/* Global Search Results Overlay/Section */}
+      <AnimatePresence>
+        {searchResult && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="px-4 pb-4 border-b border-black/[0.05]"
+          >
+            <h4 className="text-[10px] font-black text-[#25D366] uppercase tracking-widest mb-3">Global Result</h4>
+            <div className="flex items-center gap-3 p-3 bg-[#f0f9f4] rounded-xl border border-[#25D366]/10">
+              <div className="w-10 h-10 rounded-full bg-[#075E54]/10 flex items-center justify-center font-bold text-[#075E54]">
+                {searchResult.name[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h5 className="text-sm font-bold text-slate-900 truncate">{searchResult.name}</h5>
+                <p className="text-[10px] text-slate-500 truncate">{searchResult.phoneNumber}</p>
+              </div>
+              <button 
+                onClick={() => handleAccessChat(searchResult._id)}
+                className="px-3 py-1.5 bg-[#25D366] text-white text-xs font-bold rounded-lg hover:bg-[#128C7E] transition shadow-sm"
+              >
+                Message
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Conditional List View */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {activeTab === "chats" ? (
           <div className="divide-y divide-black/[0.02]">
             {chats.map((chat) => (
-              <button 
+              <motion.button 
                 key={chat._id}
-                onClick={() => setSelectedChat(chat)}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => handleSelect(chat)}
                 className={`w-full flex items-center gap-3 px-4 py-3 transition-colors relative group text-left border-l-4 ${
                   selectedChat?._id === chat._id ? "bg-[#f5f6f6] border-l-[#25D366]" : "border-transparent hover:bg-[#f5f6f6]"
                 }`}

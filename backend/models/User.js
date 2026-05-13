@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema(
     isOnline: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     lastSeen: { type: Date, default: Date.now },
+    phoneHash: { type: String, unique: true, sparse: true },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     contacts: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -35,17 +36,28 @@ const UserSchema = new mongoose.Schema(
       about: { type: String, default: "everyone" },
       readReceipts: { type: Boolean, default: true },
     },
+    isSearchable: { type: Boolean, default: true },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
 
-// Password hashing middleware
+// Hashing middleware
 UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const bcrypt = require("bcryptjs");
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  // Password hashing
+  if (this.isModified("password")) {
+    const bcrypt = require("bcryptjs");
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  // Phone number hashing (SHA-256) for privacy-safe matching
+  if (this.isModified("phoneNumber")) {
+    const crypto = require("crypto");
+    this.phoneHash = crypto.createHash("sha256").update(this.phoneNumber).digest("hex");
+  }
+
+  next();
 });
 
 // Password verification method

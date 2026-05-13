@@ -131,4 +131,31 @@ const removeFromGroup = async (req, res) => {
   }
 };
 
-module.exports = { accessChat, fetchChats, createGroupChat, addToGroup, removeFromGroup };
+const syncContacts = async (req, res) => {
+  const { contactHashes } = req.body; // Array of SHA-256 hashed phone numbers
+
+  if (!contactHashes || !Array.isArray(contactHashes)) {
+    return res.status(400).json({ message: "Invalid contact hashes sent" });
+  }
+
+  try {
+    // Find all users whose phoneHash matches any in the received list
+    const matchedUsers = await User.find({
+      phoneHash: { $in: contactHashes },
+      _id: { $ne: req.user._id } // Exclude current user
+    }).select("name username profilePic email phoneNumber");
+
+    res.status(200).json(matchedUsers);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { 
+  accessChat, 
+  fetchChats, 
+  createGroupChat, 
+  addToGroup, 
+  removeFromGroup,
+  syncContacts 
+};

@@ -110,6 +110,69 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const syncContacts = async (rawContacts) => {
+    if (!user || !rawContacts.length) return;
+    try {
+      // Hash contacts on the client-side using Web Crypto API (SHA-256)
+      const contactHashes = await Promise.all(
+        rawContacts.map(async (phone) => {
+          const msgUint8 = new TextEncoder().encode(phone.replace(/\D/g, "")); // Clean non-digits
+          const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+        })
+      );
+
+      const res = await fetch(`${ENDPOINT}/api/chat/sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ contactHashes }),
+      });
+      const matchedUsers = await res.json();
+      
+      // Auto-access chat for each matched user to populate sidebar
+      for (const matchedUser of matchedUsers) {
+        await fetch(`${ENDPOINT}/api/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ userId: matchedUser._id }),
+        });
+      }
+
+      fetchChats();
+      return matchedUsers;
+    } catch (error) {
+      console.error("Error syncing contacts:", error);
+    }
+  };
+
+  const [searchResult, setSearchResult] = useState(null);
+
+  const searchGlobalUser = async (phone) => {
+    if (!user || !phone) return;
+    try {
+      const res = await fetch(`${ENDPOINT}/api/user/search?phone=${encodeURIComponent(phone)}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResult(data);
+        return data;
+      } else {
+        setSearchResult(null);
+      }
+    } catch (error) {
+      console.error("Error searching global user:", error);
+      setSearchResult(null);
+    }
+  };
+
   return (
     <ChatContext.Provider
       value={{
@@ -121,6 +184,10 @@ export const ChatProvider = ({ children }) => {
         setMessages,
         fetchChats,
         sendMessage,
+        syncContacts,
+        searchGlobalUser,
+        searchResult,
+        setSearchResult,
         socket,
         socketConnected,
         isTyping,

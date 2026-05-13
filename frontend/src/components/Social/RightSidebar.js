@@ -7,7 +7,7 @@ import {
   Lock, ChevronRight
 } from "lucide-react";
 
-export const RightSidebar = () => {
+export const RightSidebar = ({ isMobile, onBack }) => {
   const { user } = useContext(AuthContext);
   const { selectedChat, messages } = useContext(ChatContext);
   
@@ -15,7 +15,15 @@ export const RightSidebar = () => {
   const mediaMessages = messages.filter(m => m.messageType === "image").slice(0, 6);
   const docMessages = messages.filter(m => m.messageType === "file" || m.messageType === "audio").slice(0, 3);
   return (
-    <aside className="flex flex-col h-full bg-white overflow-y-auto custom-scrollbar">
+    <aside className="flex flex-col h-full bg-white overflow-y-auto custom-scrollbar relative">
+      {isMobile && (
+        <div className="sticky top-0 bg-white/80 backdrop-blur-md z-20 flex items-center gap-4 px-6 py-4 border-b border-black/[0.03]">
+          <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:bg-black/5 rounded-full transition">
+            <X size={20} />
+          </button>
+          <h2 className="text-lg font-bold text-slate-900">Contact Info</h2>
+        </div>
+      )}
       {/* Contact Profile Detail */}
       <div className="p-8 flex flex-col items-center border-b border-black/[0.03]">
         <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-3xl font-bold text-[#075E54] border-4 border-slate-50 shadow-sm mb-4">
