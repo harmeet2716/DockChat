@@ -12,6 +12,7 @@ import { RightSidebar } from "../components/Social/RightSidebar";
 import { ChatWidget } from "../components/Social/ChatWidget";
 import { ContactSyncModal } from "../components/Social/ContactSyncModal";
 import { ChatContext } from "../context/ChatContext";
+import { MailWidget } from "../components/Mail/MailWidget";
 
 const useWindowSize = () => {
   const [windowSize, setWindowSize] = useState({
@@ -58,7 +59,7 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen bg-white font-sans selection:bg-[#25D366]/30 overflow-hidden flex flex-col">
-      {/* Professional Hybrid Header - Desktop Only or Top Bar Mobile */}
+      {/* Professional Hybrid Header */}
       <header className="flex-shrink-0 bg-[#075E54] text-white shadow-md z-50">
         <div className="max-w-full mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -114,10 +115,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content Area: Responsive Grid */}
+      {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden relative">
-        {/* Column 1: Chat List */}
-        {(!isMobile || currentView === "list") && (
+        {/* Column 1: List (Chats or Folders) */}
+        {(!isMobile || currentView === "list") && activeTab === "chats" && (
           <div className={`${isMobile ? "w-full" : "w-[400px] border-r border-black/[0.05]"} bg-white flex flex-col z-10 transition-all`}>
             <LeftSidebar 
               activeTab={activeTab} 
@@ -129,41 +130,38 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Column 2: Active Chat */}
-        {(!isMobile || currentView === "chat") && (
-          <div className="flex-1 bg-[#efe7dd] flex flex-col relative z-0">
-            {activeTab === "chats" ? (
-              <ChatWidget 
-                isMobile={isMobile} 
-                onBack={() => {
-                  setSelectedChat(null);
-                  setCurrentView("list");
-                }}
-                onShowInfo={() => setCurrentView("profile")}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center bg-white">
-                <div className="text-center text-slate-400">
-                  <Mail size={48} className="mx-auto mb-4 opacity-20" />
-                  <p className="text-sm font-medium">Select a mail to read</p>
+        {/* Content View: Chat Widget or Mail Widget */}
+        <div className="flex-1 flex overflow-hidden relative z-0">
+          {activeTab === "chats" ? (
+            <div className="flex-1 flex overflow-hidden">
+              {(!isMobile || currentView === "chat") && (
+                <div className="flex-1 flex flex-col bg-[#efe7dd] relative">
+                  <ChatWidget 
+                    isMobile={isMobile} 
+                    onBack={() => {
+                      setSelectedChat(null);
+                      setCurrentView("list");
+                    }}
+                    onShowInfo={() => setCurrentView("profile")}
+                  />
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Column 3: Info/Profile Panel */}
-        {(!isMobile || currentView === "profile") && (
-          <div className={`${isMobile ? "absolute inset-0 z-50" : "w-[350px] border-l border-black/[0.05]"} bg-white flex flex-col transition-all`}>
-            <RightSidebar 
-              isMobile={isMobile}
-              onBack={() => setCurrentView("chat")}
-            />
-          </div>
-        )}
+              )}
+              {(!isMobile || currentView === "profile") && (
+                <div className={`${isMobile ? "absolute inset-0 z-50" : "w-[350px] border-l border-black/[0.05]"} bg-white flex flex-col transition-all`}>
+                  <RightSidebar 
+                    isMobile={isMobile}
+                    onBack={() => setCurrentView("chat")}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <MailWidget />
+          )}
+        </div>
       </main>
 
-      {/* Profile/Settings Menu (Mobile Overlay) */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -186,9 +184,9 @@ export default function Dashboard() {
                   <p className="text-sm text-slate-500">{user?.username || "@user"}</p>
                 </div>
               </div>
-              <button className="w-full flex items-center gap-4 text-lg font-bold text-slate-700 p-4 hover:bg-slate-50 rounded-2xl transition">
+              <Link to="/settings" className="w-full flex items-center gap-4 text-lg font-bold text-slate-700 p-4 hover:bg-slate-50 rounded-2xl transition">
                 <Settings size={24} /> Settings
-              </button>
+              </Link>
               <button onClick={logout} className="w-full flex items-center gap-4 text-lg font-bold text-rose-500 p-4 hover:bg-rose-50 rounded-2xl transition">
                 <LogOutIcon size={24} /> Logout
               </button>

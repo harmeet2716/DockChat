@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Smile, Paperclip, Mic, Send, 
   MoreVertical, Phone, Video, Search,
-  Check, CheckCheck, ChevronLeft, Info, MessageCircle
+  Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail
 } from "lucide-react";
 
 export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
@@ -63,6 +63,18 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
           <button className="hidden sm:block p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Video size={20} /></button>
           <button className="hidden sm:block p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Phone size={18} /></button>
           <button onClick={onShowInfo} className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><Info size={20} /></button>
+          <button 
+            title="Convert to Mail"
+            className="p-2 text-[#075E54] hover:bg-[#075E54]/10 rounded-full transition"
+            onClick={() => {
+              // Extract chat history for the bridge
+              const transcript = messages.map(m => `${m.sender.name}: ${m.content}`).join('\n');
+              localStorage.setItem("dockchat_bridge_content", transcript);
+              alert("Conversation captured! Go to the MAIL tab and click Compose to see the transcript.");
+            }}
+          >
+            <Mail size={20} />
+          </button>
           <button className="p-2 text-slate-500 hover:bg-black/5 rounded-full transition"><MoreVertical size={20} /></button>
         </div>
       </header>

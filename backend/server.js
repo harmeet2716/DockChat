@@ -13,6 +13,7 @@ const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const userRoutes = require("./routes/userRoutes");
+const mailRoutes = require("./routes/mailRoutes");
 
 dotenv.config();
 
@@ -65,6 +66,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/mail", mailRoutes);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
