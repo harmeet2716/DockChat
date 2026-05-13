@@ -4,7 +4,7 @@ import { ChatContext } from "../../context/ChatContext";
 import { 
   Info, FileText, Image as ImageIcon, 
   Link as LinkIcon, Bell, Star, Trash2,
-  Lock, ChevronRight
+  Lock, ChevronRight, X
 } from "lucide-react";
 
 export const RightSidebar = ({ isMobile, onBack }) => {

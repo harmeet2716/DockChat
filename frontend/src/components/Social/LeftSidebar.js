@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   BadgeCheck, MessageCircle, MoreVertical, 
   Search, Filter, CheckCheck, Star, Trash2, Archive,
@@ -47,6 +47,7 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
       setSelectedChat(data);
       setSearchResult(null);
       setQuery("");
+      if (onSelectChat) onSelectChat(data);
     } catch (err) {
       console.error("Error accessing chat:", err);
     }
@@ -68,7 +69,7 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
   const emails = [
     { id: 1, sender: "Google Cloud", subject: "Invoice for April 2024", snippet: "Your invoice is now available in the billing console...", time: "1:15 PM", starred: false, important: true },
     { id: 2, sender: "GitHub", subject: "[Security] Critical update for repository", snippet: "A security vulnerability was found in one of your dependencies...", time: "10:30 AM", starred: true, important: true },
-    { id: 3, sender: "DockChat Team", subject: "Welcome to Hybrid Mode!", snippet: "Experience the best of both worlds with our new 2-in-1 interface...", time: "昨天", starred: false, important: false },
+    { id: 3, sender: "DockChat Team", subject: "Welcome to Hybrid Mode!", snippet: "Experience the best of both worlds with our new 2-in-1 interface...", time: "Yesterday", starred: false, important: false },
   ];
 
   return (
@@ -134,7 +135,6 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
                   <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-black/[0.05]">
                     {getChatProfile(chat)}
                   </div>
-                  {/* online status logic could be added here */}
                 </div>
                 <div className="flex-1 min-w-0 pr-2">
                   <div className="flex justify-between items-baseline mb-0.5">
@@ -149,7 +149,7 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
                     </p>
                   </div>
                 </div>
-              </button>
+              </motion.button>
             ))}
           </div>
         ) : (
