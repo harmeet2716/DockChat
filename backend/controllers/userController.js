@@ -8,14 +8,15 @@ const searchUserByPhone = async (req, res) => {
   }
 
   try {
-    // Clean phone number for comparison
+    // Clean phone number: remove all non-digits for a strict digit match
     const cleanPhone = phone.replace(/\D/g, "");
 
-    // Search for user by phone number and check if they are searchable
+    // Search for user by phone number (flexible match)
+    // We search for a match where the stored number contains the clean digits
     const userFound = await User.findOne({
-      phoneNumber: { $regex: cleanPhone }, // Partial match or exact
-      isSearchable: true,
-      _id: { $ne: req.user._id } // Don't find self
+      phoneNumber: { $regex: cleanPhone }, 
+      isSearchable: { $ne: false }, // Handle users where the field might be missing
+      _id: { $ne: req.user._id } 
     }).select("name username profilePic email phoneNumber about");
 
     if (userFound) {

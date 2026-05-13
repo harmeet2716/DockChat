@@ -90,7 +90,7 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
 
       {/* Global Search Results Overlay/Section */}
       <AnimatePresence>
-        {searchResult && (
+        {searchResult ? (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -113,6 +113,14 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
                 Message
               </button>
             </div>
+          </motion.div>
+        ) : query.length >= 3 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="px-6 py-4 text-center"
+          >
+            <p className="text-xs text-slate-400 italic">No registered user found with this number</p>
           </motion.div>
         )}
       </AnimatePresence>
