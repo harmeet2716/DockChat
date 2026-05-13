@@ -160,11 +160,29 @@ const verifyOTP = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, about, profilePic } = req.body;
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (about) updateData.about = about;
+    if (profilePic) updateData.profilePic = profilePic;
+    updateData.isProfileComplete = true;
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, about, profilePic, isProfileComplete: true },
+      updateData,
       { new: true }
-    );
+    ).select("-password");
+
+    // Real-time propagation
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("user-update", {
+        _id: user._id,
+        name: user.name,
+        profilePic: user.profilePic,
+        about: user.about
+      });
+    }
+
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });

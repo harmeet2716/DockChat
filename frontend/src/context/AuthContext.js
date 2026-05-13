@@ -86,9 +86,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateProfile = async (profileData) => {
+    // Optimistic Update
+    const previousUser = { ...user };
+    const optimisticUser = { ...user, ...profileData };
+    setUser(optimisticUser);
+    localStorage.setItem("dockchat_user", JSON.stringify(optimisticUser));
+
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/profile`, {
-        method: "PUT",
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/auth/profile`, {
+        method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}` 
@@ -96,14 +103,24 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(profileData),
       });
       const data = await res.json();
+      
       if (data._id) {
-        const updatedUser = { ...user, ...data };
-        login(updatedUser);
+        const finalUser = { ...user, ...data };
+        setUser(finalUser);
+        localStorage.setItem("dockchat_user", JSON.stringify(finalUser));
+        return data;
+      } else {
+        // Rollback
+        setUser(previousUser);
+        localStorage.setItem("dockchat_user", JSON.stringify(previousUser));
+        return { message: "Failed to update profile" };
       }
-      return data;
     } catch (err) {
       console.error("updateProfile error:", err);
-      return { message: "Failed to update profile" };
+      // Rollback on network error
+      setUser(previousUser);
+      localStorage.setItem("dockchat_user", JSON.stringify(previousUser));
+      return { message: "Network error" };
     }
   };
 

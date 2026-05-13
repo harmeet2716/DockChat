@@ -14,7 +14,7 @@ router.get("/suggested", protect, getSuggestedUsers);
 router.post("/send-otp", sendOTP);
 router.post("/verify-otp", verifyOTP);
 router.get("/search", protect, searchUsers);
-router.put("/profile", protect, updateProfile);
+router.patch("/profile", protect, updateProfile);
 router.post("/sync-contacts", protect, syncContacts);
 
 module.exports = router;

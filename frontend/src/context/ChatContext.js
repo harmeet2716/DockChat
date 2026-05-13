@@ -71,15 +71,40 @@ export const ChatProvider = ({ children }) => {
     if (socket) {
       socket.on("message recieved", (newMessageReceived) => {
         if (!selectedChat || selectedChat._id !== newMessageReceived.chat._id) {
-          // Notify or update unread count in chats list
           fetchChats();
         } else {
           setMessages((prev) => [...prev, newMessageReceived]);
         }
       });
+
+      socket.on("user-update", (updatedUser) => {
+        // Update chats list
+        setChats((prevChats) => prevChats.map(chat => {
+          const updatedUsers = chat.users.map(u => 
+            u._id === updatedUser._id ? { ...u, ...updatedUser } : u
+          );
+          return { ...chat, users: updatedUsers };
+        }));
+
+        // Update selected chat if active
+        if (selectedChat) {
+          const isParticipant = selectedChat.users.some(u => u._id === updatedUser._id);
+          if (isParticipant) {
+            setSelectedChat(prev => {
+              const updatedUsers = prev.users.map(u => 
+                u._id === updatedUser._id ? { ...u, ...updatedUser } : u
+              );
+              return { ...prev, users: updatedUsers };
+            });
+          }
+        }
+      });
     }
     return () => {
-      if (socket) socket.off("message recieved");
+      if (socket) {
+        socket.off("message recieved");
+        socket.off("user-update");
+      }
     };
   }, [selectedChat, fetchChats]);
 
