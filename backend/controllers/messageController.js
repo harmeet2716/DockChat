@@ -52,7 +52,7 @@ const markAsRead = async (req, res) => {
     const { chatId } = req.body;
     await Message.updateMany(
       { chat: chatId, sender: { $ne: req.user._id } },
-      { $addToSet: { seenBy: req.user._id } }
+      { $addToSet: { seenBy: req.user._id }, $set: { status: "read" } }
     );
     res.status(200).json({ message: "Messages marked as read" });
   } catch (error) {

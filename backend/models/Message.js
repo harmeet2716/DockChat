@@ -13,6 +13,11 @@ const MessageSchema = new mongoose.Schema(
     mediaUrl: { type: String, default: "" },
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     deliveredTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    status: {
+      type: String,
+      enum: ["sent", "delivered", "read"],
+      default: "sent",
+    },
   },
   { timestamps: true }
 );

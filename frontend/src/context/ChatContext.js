@@ -58,6 +58,29 @@ export const ChatProvider = ({ children }) => {
     }
   }, [selectedChat, user]);
 
+  // Mark as read when chat is selected
+  useEffect(() => {
+    if (selectedChat && user && socket) {
+      const otherUser = selectedChat.users.find(u => u._id !== user._id);
+      if (otherUser) {
+        socket.emit("message read", {
+          chatId: selectedChat._id,
+          senderId: otherUser._id
+        });
+
+        // Update backend
+        fetch(`${ENDPOINT}/api/message/markAsRead`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ chatId: selectedChat._id }),
+        }).catch((err) => console.error("Mark as read error:", err));
+      }
+    }
+  }, [selectedChat, user]);
+
   useEffect(() => {
     fetchChats();
   }, [fetchChats]);
@@ -74,7 +97,25 @@ export const ChatProvider = ({ children }) => {
           fetchChats();
         } else {
           setMessages((prev) => [...prev, newMessageReceived]);
+          // Notify sender it was delivered
+          socket.emit("message delivered", {
+            messageId: newMessageReceived._id,
+            chatId: newMessageReceived.chat._id,
+            senderId: newMessageReceived.sender._id
+          });
         }
+      });
+
+      socket.on("message status updated", (data) => {
+        setMessages((prevMessages) => prevMessages.map(msg => {
+          if (data.messageId && msg._id === data.messageId) {
+            return { ...msg, status: data.status };
+          }
+          if (data.chatId && msg.chat._id === data.chatId && msg.sender._id !== user._id) {
+            return { ...msg, status: data.status };
+          }
+          return msg;
+        }));
       });
 
       socket.on("user-update", (updatedUser) => {

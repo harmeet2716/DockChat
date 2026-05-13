@@ -112,9 +112,9 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isSentByMe && (
-                      msg.readBy?.length > 0
-                        ? <CheckCheck size={14} className="text-blue-500" />
-                        : msg.deliveredTo?.length > 0 
+                      msg.status === "read"
+                        ? <CheckCheck size={14} className="text-[#34B7F1]" />
+                        : msg.status === "delivered" 
                           ? <CheckCheck size={14} className="text-slate-400" />
                           : <Check size={14} className="text-slate-400" />
                     )}

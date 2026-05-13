@@ -115,6 +115,22 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("message delivered", (data) => {
+    // data: { messageId, chatId, senderId }
+    socket.in(data.senderId).emit("message status updated", {
+      messageId: data.messageId,
+      status: "delivered"
+    });
+  });
+
+  socket.on("message read", (data) => {
+    // data: { chatId, senderId }
+    socket.in(data.senderId).emit("message status updated", {
+      chatId: data.chatId,
+      status: "read"
+    });
+  });
+
   socket.on("disconnect", () => {
     console.log("🔴 Socket disconnected:", socket.id);
   });
