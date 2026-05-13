@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { 
   Bell, Shield, Moon, LogOut, ArrowLeft, 
   Camera, Check, Trash2, ChevronRight, Globe, HelpCircle,
-  Pencil, X, Save, User, Info, Phone
+  Pencil, X, Save, User, Info, Phone, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -99,14 +99,15 @@ const SettingsPage = () => {
             </button>
 
             {/* Phone Row (Read Only) */}
-            <div className="w-full flex items-center justify-between p-6 text-left opacity-60">
+            <div className="w-full flex items-center justify-between p-6 text-left opacity-60 cursor-not-allowed">
               <div className="flex items-start gap-6">
                 <Phone className="text-[#075E54] mt-1" size={20} />
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Phone Number</label>
-                  <p className="text-sm font-semibold text-[#111b21]">{user?.phoneNumber}</p>
+                  <p className="text-base font-semibold text-[#111b21]">{user?.phoneNumber}</p>
                 </div>
               </div>
+              <Lock size={18} className="text-slate-300" />
             </div>
           </section>
 

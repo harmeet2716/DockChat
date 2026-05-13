@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -100,7 +101,7 @@ export default function Dashboard() {
               <Bell size={20} className="text-white/90" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#25D366] rounded-full border-2 border-[#075E54]"></span>
             </button>
-            <div className="w-8 h-8 rounded-full bg-white/10 p-0.5 border border-white/20">
+            <Link to="/settings" className="w-8 h-8 rounded-full bg-white/10 p-0.5 border border-white/20 hover:scale-110 transition-transform active:scale-95 cursor-pointer block overflow-hidden">
               {user?.profilePic ? (
                 <img src={user.profilePic} alt={user.username} className="w-full h-full rounded-full object-cover" />
               ) : (
@@ -108,7 +109,7 @@ export default function Dashboard() {
                   {user?.username?.[0]}
                 </div>
               )}
-            </div>
+            </Link>
           </div>
         </div>
       </header>
