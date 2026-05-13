@@ -43,7 +43,7 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Hashing middleware
-UserSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function () {
   // Password hashing
   if (this.isModified("password")) {
     const bcrypt = require("bcryptjs");
@@ -56,8 +56,6 @@ UserSchema.pre("save", async function (next) {
     const crypto = require("crypto");
     this.phoneHash = crypto.createHash("sha256").update(this.phoneNumber).digest("hex");
   }
-
-  next();
 });
 
 // Password verification method
