@@ -16,6 +16,39 @@ export const MailWidget = () => {
   const [loading, setLoading] = useState(false);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [composeBody, setComposeBody] = useState("");
+  const [to, setTo] = useState("");
+  const [subject, setSubject] = useState("");
+
+  const handleSendMail = async () => {
+    if (!to || !subject || !composeBody) return;
+    setLoading(true);
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/mail`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          recipients: { to: [to] },
+          subject,
+          content: composeBody,
+        }),
+      });
+      if (res.ok) {
+        setIsComposeOpen(false);
+        setComposeBody("");
+        setTo("");
+        setSubject("");
+        fetchMails();
+      }
+    } catch (error) {
+      console.error("Error sending mail:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMails = async () => {
     setLoading(true);
@@ -206,11 +239,23 @@ export const MailWidget = () => {
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-[#075E54] ml-1">To</label>
-                    <input type="text" className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition" placeholder="recipient@example.com" />
+                    <input 
+                      type="text" 
+                      value={to}
+                      onChange={(e) => setTo(e.target.value)}
+                      className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition" 
+                      placeholder="recipient@example.com" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-[#075E54] ml-1">Subject</label>
-                    <input type="text" className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition" placeholder="What's this about?" />
+                    <input 
+                      type="text" 
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition" 
+                      placeholder="What's this about?" 
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -226,8 +271,12 @@ export const MailWidget = () => {
                   <button className="flex items-center gap-2 text-slate-400 hover:text-[#075E54] font-bold text-sm transition">
                     <Paperclip size={20} /> Add Attachment
                   </button>
-                  <button className="px-10 py-4 bg-[#25D366] text-white font-black rounded-2xl shadow-xl shadow-[#25D366]/30 hover:bg-[#128C7E] transition active:scale-95 flex items-center gap-3">
-                    Send Email <ChevronRight size={20} />
+                  <button 
+                    onClick={handleSendMail}
+                    disabled={loading || !to || !subject || !composeBody}
+                    className="px-10 py-4 bg-[#25D366] text-white font-black rounded-2xl shadow-xl shadow-[#25D366]/30 hover:bg-[#128C7E] transition active:scale-95 flex items-center gap-3 disabled:opacity-50"
+                  >
+                    {loading ? <Loader2 className="animate-spin" /> : <>Send Email <ChevronRight size={20} /></>}
                   </button>
                 </div>
               </div>
