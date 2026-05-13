@@ -1,101 +1,165 @@
-import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { motion } from "framer-motion";
-import { User, Camera, ArrowRight, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Camera, User, Info, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function SetupProfile() {
-  const [name, setName] = useState("");
+  const { user, updateProfile } = useContext(AuthContext);
+  const [name, setName] = useState(user?.name || "");
   const [about, setAbout] = useState("Hey there! I am using DockChat.");
+  const [profilePic, setProfilePic] = useState("");
   const [loading, setLoading] = useState(false);
-  const { updateProfile } = useContext(AuthContext);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.url) {
+        setProfilePic(data.url);
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFinish = async (e) => {
+    if (e) e.preventDefault();
     if (!name.trim()) return;
     
     setLoading(true);
-    const res = await updateProfile({ name, about });
-    setLoading(false);
-    
-    if (res._id) {
-      navigate("/dashboard");
+    try {
+      const res = await updateProfile({ 
+        name: name.trim(), 
+        about: about.trim(), 
+        profilePic 
+      });
+      
+      if (res && res._id) {
+        // Successful update
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Profile setup failed:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center p-6 selection:bg-[#25D366]/30 font-sans">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-12 font-sans selection:bg-[#25D366]/30">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md"
       >
-        <div className="p-10 rounded-[2rem] bg-white shadow-xl border border-black/[0.03] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-[#075E54]" />
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#25D366]/10 text-[#075E54] rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+            <CheckCircle2 size={12} /> Step 2: Finalize Identity
+          </div>
+          <h1 className="text-4xl font-black text-[#111b21] mb-2 tracking-tight">Setup Your Profile</h1>
+          <p className="text-slate-500 text-sm">People will see your name and photo when you message them.</p>
+        </div>
+
+        {/* Profile Pic Upload Section */}
+        <div className="relative w-40 h-40 mx-auto mb-12">
+          <div className="w-full h-full rounded-full bg-slate-50 border-4 border-white shadow-2xl flex items-center justify-center overflow-hidden group relative">
+            {profilePic ? (
+              <img src={profilePic} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            ) : (
+              <User size={64} className="text-slate-200" />
+            )}
+            
+            <AnimatePresence>
+              {uploading && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white"
+                >
+                  <Loader2 size={24} className="animate-spin mb-2" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Uploading...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-16 h-16 mb-6 p-3 bg-[#f0f2f5] rounded-full shadow-sm">
-              <img src="/logo.png" alt="DockChat Logo" className="w-full h-full object-contain" />
+          <label className="absolute bottom-1 right-1 p-3 bg-[#25D366] text-white rounded-full shadow-xl cursor-pointer hover:bg-[#128C7E] hover:scale-110 transition-all active:scale-95 group">
+            <Camera size={24} className="group-hover:rotate-12 transition-transform" />
+            <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
+          </label>
+        </div>
+
+        {/* Onboarding Form */}
+        <form onSubmit={handleFinish} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-[#075E54] uppercase tracking-widest ml-1">Display Name</label>
+            <div className="relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+                <User size={20} />
+              </div>
+              <input 
+                type="text" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="How should we call you?"
+                required
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-14 pr-4 text-slate-900 font-semibold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/10 focus:border-[#25D366]/20 transition-all"
+              />
             </div>
-            <h2 className="text-2xl font-bold text-[#111b21] tracking-tight mb-2">Profile Info</h2>
-            <p className="text-[#54656f] text-center text-sm font-medium">
-              Complete your identity to start chatting.
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="flex justify-center">
-              <div className="relative group/avatar">
-                <div className="w-28 h-28 rounded-full bg-[#f0f2f5] border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:border-[#075E54]/50 transition-all duration-500 overflow-hidden">
-                  <User size={48} />
-                </div>
-                <button type="button" className="absolute bottom-1 right-1 w-10 h-10 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all">
-                  <Camera size={20} />
-                </button>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-[#075E54] uppercase tracking-widest ml-1">Status Message</label>
+            <div className="relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+                <Info size={20} />
               </div>
+              <input 
+                type="text" 
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
+                placeholder="A bit about yourself..."
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-14 pr-4 text-slate-900 font-semibold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/10 focus:border-[#25D366]/20 transition-all"
+              />
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Your Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  required
-                  className="w-full bg-[#f0f2f5] border-none rounded-xl py-4 px-6 text-slate-900 font-medium placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all"
-                />
-              </div>
+          <button
+            type="submit"
+            disabled={loading || !name.trim() || uploading}
+            className="w-full mt-6 bg-[#25D366] text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#128C7E] disabled:opacity-50 disabled:grayscale transition-all shadow-2xl shadow-[#25D366]/30 active:scale-95 transform"
+          >
+            {loading ? (
+              <Loader2 className="animate-spin" size={24} />
+            ) : (
+              <>
+                <span className="text-lg">Finish Setup</span>
+                <ArrowRight size={22} />
+              </>
+            )}
+          </button>
+        </form>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">About / Bio</label>
-                <input
-                  type="text"
-                  value={about}
-                  onChange={(e) => setAbout(e.target.value)}
-                  placeholder="Hey there! I am using DockChat."
-                  className="w-full bg-[#f0f2f5] border-none rounded-xl py-4 px-6 text-slate-900 font-medium placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              disabled={loading || !name.trim()}
-              className="w-full bg-[#25D366] hover:bg-[#128C7E] disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 mt-4"
-            >
-              {loading ? (
-                <RefreshCw className="animate-spin" size={20} />
-              ) : (
-                <>
-                  <span>Start Chatting</span>
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </form>
-        </div>
+        <p className="mt-8 text-center text-slate-400 text-xs px-8 leading-relaxed">
+          By clicking finish, your name and photo will become visible to other users on the platform.
+        </p>
       </motion.div>
     </div>
   );

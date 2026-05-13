@@ -37,6 +37,7 @@ const UserSchema = new mongoose.Schema(
       readReceipts: { type: Boolean, default: true },
     },
     isSearchable: { type: Boolean, default: true },
+    isProfileComplete: { type: Boolean, default: false },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }

@@ -162,7 +162,7 @@ const updateProfile = async (req, res) => {
     const { name, about, profilePic } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, about, profilePic },
+      { name, about, profilePic, isProfileComplete: true },
       { new: true }
     );
     res.status(200).json(user);

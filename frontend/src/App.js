@@ -11,8 +11,16 @@ import SettingsPage from "./pages/SettingsPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useContext(AuthContext);
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const { isAuthenticated, user } = useContext(AuthContext);
+  
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  
+  // Force profile setup if not complete
+  if (user && !user.isProfileComplete && window.location.pathname !== "/setup-profile") {
+    return <Navigate to="/setup-profile" />;
+  }
+
+  return children;
 }
 
 function AppRoutes() {
