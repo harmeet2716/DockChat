@@ -1,0 +1,29 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - HOST=0.0.0.0
+      - REACT_APP_BACKEND_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - dockchat-network
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URL=mongodb+srv://Harmeet:Khushmeet@cluster0.olrv69o.mongodb.net/dockchat?retryWrites=true&w=majority
+      - PORT=5000
+    networks:
+      - dockchat-network
+
+networks:
+  dockchat-network:
+    driver: bridge
