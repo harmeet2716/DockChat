@@ -28,10 +28,11 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL || "mongodb+srv://Harmeet:Khushmeet@cluster0.olrv69o.mongodb.net/dockchat?retryWrites=true&w=majority";
 
 app.use(cors({
-  origin: ["http://localhost:3000", "*.vercel.app", "https://dockchat.vercel.app"],
+  origin: ["http://localhost:3000", "https://dock-chat-sigma.vercel.app", "https://dockchat.vercel.app"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
 
