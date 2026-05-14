@@ -9,10 +9,31 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const savedUser = localStorage.getItem("dockchat_user");
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      refreshUser(parsedUser.token);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  const refreshUser = async (token) => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data._id) {
+        const updatedUser = { ...user, ...data, token }; // Keep the token
+        setUser(updatedUser);
+        localStorage.setItem("dockchat_user", JSON.stringify(updatedUser));
+      }
+    } catch (err) {
+      console.error("refreshUser error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = (userData) => {
     setUser(userData);
@@ -22,6 +43,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("dockchat_user");
+  };
+
+  const updateUser = (data) => {
+    const updatedUser = { ...user, ...data };
+    setUser(updatedUser);
+    localStorage.setItem("dockchat_user", JSON.stringify(updatedUser));
   };
 
   const sendOTP = async (phoneNumber) => {
@@ -197,7 +224,8 @@ export const AuthProvider = ({ children }) => {
       sendOTP, 
       verifyOTP, 
       updateProfile, 
-      logout 
+      logout,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>

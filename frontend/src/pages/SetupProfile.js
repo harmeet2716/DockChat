@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 export function SetupProfile() {
   const { user, updateProfile } = useContext(AuthContext);
   const [name, setName] = useState(user?.name || "");
-  const [about, setAbout] = useState("Hey there! I am using DockChat.");
+  const [about, setAbout] = useState(user?.about || "Hey there! I am using DockChat.");
   const [profilePic, setProfilePic] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);

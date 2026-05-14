@@ -74,17 +74,17 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-[var(--bg-secondary)] border-r border-white/5 transition-all">
       {/* Pinned Search Bar */}
-      <div className="flex-shrink-0 p-4 bg-white">
+      <div className="flex-shrink-0 p-6 bg-[var(--bg-secondary)] border-b border-white/5">
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#075E54] transition" size={16} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--accent)] transition" size={18} />
           <input 
             type="text" 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={activeTab === "chats" ? "Search phone number..." : "Search mail"} 
-            className="w-full bg-[#f0f2f5] border-none rounded-lg py-2 pl-10 pr-4 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#075E54]/20 transition"
+            placeholder={activeTab === "chats" ? "Identify contact..." : "Index archives..."} 
+            className="w-full bg-black/40 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all shadow-inner"
           />
         </div>
       </div>
@@ -129,32 +129,33 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
       {/* Conditional List View */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {activeTab === "chats" ? (
-          <div className="divide-y divide-black/[0.02]">
+          <div className="divide-y divide-white/5">
             {chats.map((chat) => (
               <motion.button 
                 key={chat._id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 onClick={() => handleSelect(chat)}
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors relative group text-left border-l-4 ${
-                  selectedChat?._id === chat._id ? "bg-[#f5f6f6] border-l-[#25D366]" : "border-transparent hover:bg-[#f5f6f6]"
+                className={`w-full flex items-center gap-4 px-6 py-5 transition-all relative group text-left border-l-4 ${
+                  selectedChat?._id === chat._id ? "bg-white/[0.03] border-l-[var(--accent)] shadow-inner" : "border-transparent hover:bg-white/[0.01]"
                 }`}
               >
                 <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-black/[0.05]">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white/40 font-black border border-white/10 shadow-lg group-hover:scale-105 transition-transform">
                     {getChatProfile(chat)}
                   </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[var(--bg-secondary)] shadow-sm"></div>
                 </div>
-                <div className="flex-1 min-w-0 pr-2">
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <h4 className="text-sm font-semibold text-slate-900 truncate">{getChatName(chat)}</h4>
-                    <span className="text-[10px] text-slate-400">
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline mb-1">
+                    <h4 className="text-sm font-black text-white truncate tracking-tight uppercase italic">{getChatName(chat)}</h4>
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">
                       {chat.latestMessage ? new Date(chat.latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-xs text-slate-500 truncate">
-                      {chat.latestMessage ? chat.latestMessage.content : "No messages yet"}
+                    <p className="text-xs text-white/40 truncate font-medium">
+                      {chat.latestMessage ? chat.latestMessage.content : "Secure channel established..."}
                     </p>
                   </div>
                 </div>
@@ -162,22 +163,22 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
             ))}
           </div>
         ) : (
-          <div className="divide-y divide-black/[0.02]">
+          <div className="divide-y divide-white/5">
             {emails.map((mail) => (
               <button 
                 key={mail.id}
-                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#f5f6f6] transition-colors relative group text-left border-l-4 border-transparent hover:border-l-[#ea4335]"
+                className="w-full flex items-start gap-4 px-6 py-5 hover:bg-white/[0.02] transition-all relative group text-left border-l-4 border-transparent hover:border-l-[var(--mail-accent)]"
               >
                 <div className="flex-shrink-0 mt-1">
-                  <Star size={18} className={mail.starred ? "text-amber-400 fill-amber-400" : "text-slate-300"} />
+                  <Star size={20} className={mail.starred ? "text-amber-500 fill-amber-500" : "text-white/10"} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <h4 className="text-sm font-bold text-slate-900 truncate">{mail.sender}</h4>
-                    <span className="text-[10px] text-slate-400">{mail.time}</span>
+                  <div className="flex justify-between items-baseline mb-1">
+                    <h4 className="text-sm font-black text-white truncate tracking-tight">{mail.sender}</h4>
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">{mail.time}</span>
                   </div>
-                  <h5 className="text-xs font-bold text-slate-950 truncate mb-0.5">{mail.subject}</h5>
-                  <p className="text-xs text-slate-500 truncate line-clamp-1">{mail.snippet}</p>
+                  <h5 className={`text-xs font-bold truncate mb-1 ${mail.important ? "text-[var(--mail-alert)]" : "text-white/80"}`}>{mail.subject}</h5>
+                  <p className="text-xs text-white/40 truncate line-clamp-1 italic font-medium">{mail.snippet}</p>
                 </div>
               </button>
             ))}
@@ -186,11 +187,11 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
       </div>
 
       {/* Global Bottom Navigation (Utility) */}
-      <div className="flex-shrink-0 flex p-3 bg-[#f0f2f5] items-center justify-around text-slate-500 border-t border-black/[0.05]">
-        <button className="p-2 hover:text-[#075E54] transition"><Home size={20} /></button>
-        <button className="p-2 hover:text-[#075E54] transition"><Users size={20} /></button>
-        <button className="p-2 hover:text-[#075E54] transition"><FileText size={20} /></button>
-        <button className="p-2 hover:text-[#075E54] transition"><Settings size={20} /></button>
+      <div className="flex-shrink-0 flex p-4 glass-dark items-center justify-around text-white/20 border-t border-white/5">
+        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><Home size={22} /></button>
+        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><Users size={22} /></button>
+        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><FileText size={22} /></button>
+        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><Settings size={22} /></button>
       </div>
     </div>
   );

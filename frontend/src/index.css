@@ -5,21 +5,47 @@
 @tailwind utilities;
 
 :root {
-  /* WhatsApp Inspired Palette */
-  --whatsapp-teal: #075E54;
-  --whatsapp-teal-light: #128C7E;
-  --whatsapp-green: #25D366;
-  --whatsapp-bubble-out: #DCF8C6;
-  --whatsapp-bubble-in: #ffffff;
-  --whatsapp-bg: #E5DDD5;
-  --whatsapp-chat-bg: #efe7dd;
-  
-  /* Gmail Inspired Palette */
-  --gmail-red: #ea4335;
-  --gmail-red-dark: #d93025;
-  
-  --primary: 7 94 84; /* whatsapp-teal */
-  --primary-focus: 18 140 126; /* whatsapp-teal-light */
+  /* Stealth Gray Palette (Chat) */
+  --chat-bg: #121212;
+  --chat-bubble-out: #555555;
+  --chat-bubble-in: #2D2D2D;
+  --chat-text: #E0E0E0;
+  --chat-accent: #555555;
+  --chat-border: rgba(255, 255, 255, 0.05);
+
+  /* Dark Crimson Palette (Mail) */
+  --mail-bg: #000000;
+  --mail-accent: #800000;
+  --mail-alert: #B22222;
+  --mail-text: #FFFFFF;
+  --mail-border: rgba(128, 0, 0, 0.2);
+
+  /* Shared Design Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-chat {
+  --bg-primary: var(--chat-bg);
+  --bg-secondary: #1a1a1a;
+  --text-primary: var(--chat-text);
+  --text-secondary: #a0a0a0;
+  --accent: var(--chat-accent);
+  --border: var(--chat-border);
+  --bubble-bg: var(--chat-bubble-in);
+  --bubble-text: var(--chat-text);
+}
+
+.theme-mail {
+  --bg-primary: var(--mail-bg);
+  --bg-secondary: #0a0a0a;
+  --text-primary: var(--mail-text);
+  --text-secondary: #d0d0d0;
+  --accent: var(--mail-accent);
+  --border: var(--mail-border);
+  --bubble-bg: var(--mail-accent);
+  --bubble-text: var(--mail-text);
 }
 
 body {
@@ -71,11 +97,21 @@ body {
 
 /* Base Styles */
 .glass {
-  @apply bg-white border border-black/[0.03];
+  @apply backdrop-blur-md bg-white/5 border border-white/10;
+}
+
+.glass-dark {
+  @apply backdrop-blur-xl bg-black/40 border border-white/5;
+}
+
+.glass-accent {
+  backdrop-filter: blur(12px);
+  background-color: color-mix(in srgb, var(--accent), transparent 90%);
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 80%);
 }
 
 .shadow-premium {
-  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
   .divider-thin {
@@ -92,33 +128,79 @@ body {
     to { transform: rotate(360deg); }
   }
 
-/* Mobile Responsive Utilities */
-@media (max-width: 768px) {
-  .mobile-hide {
-    display: none !important;
-  }
-  
-  /* Optimize touch targets for mobile */
-  button, a, input, select {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Prevent horizontal scroll on mobile */
-  body {
-    overflow-x: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-  }
-  
-  #root {
-    height: 100%;
+/* Mobile First Fluid Layouts */
+:root {
+  --nav-height: 70px;
+  --header-height: 64px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden; /* App-like feel */
+  -webkit-tap-highlight-color: transparent;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+/* Fluid Typography */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  html { font-size: 14px; }
+}
+
+/* Accessibility: Touch Targets */
+button, a, input, select {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Hide scrollbars but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile-First Navigation (Mobile App feel) */
+.mobile-nav {
+  @apply fixed bottom-0 left-0 right-0 h-[var(--nav-height)] bg-black/80 backdrop-blur-xl border-t border-white/5 flex items-center justify-around z-[100] sm:hidden;
+}
+
+/* Responsive Grid/Flex Utilities */
+.fluid-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+@media (min-width: 1024px) {
+  .fluid-container {
+    flex-direction: row;
   }
 }
 
-@media (min-width: 769px) {
-  .desktop-hide {
-    display: none !important;
-  }
+/* Custom Scrollbar for Desktop */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

@@ -67,6 +67,8 @@ const registerUser = async (req, res) => {
       email: user.email,
       phoneNumber: user.phoneNumber,
       profilePic: user.profilePic,
+      isProfileComplete: user.isProfileComplete,
+      isContactsSynced: user.isContactsSynced,
       token: generateToken(user._id),
       message: "Registration successful"
     });
@@ -101,6 +103,8 @@ const loginUser = async (req, res) => {
         phoneNumber: user.phoneNumber,
         isVerified: user.isVerified,
         profilePic: user.profilePic,
+        isProfileComplete: user.isProfileComplete,
+        isContactsSynced: user.isContactsSynced,
         token: generateToken(user._id),
       });
     } else {
@@ -148,6 +152,8 @@ const verifyOTP = async (req, res) => {
       phoneNumber: user.phoneNumber,
       name: user.name,
       profilePic: user.profilePic,
+      isProfileComplete: user.isProfileComplete,
+      isContactsSynced: user.isContactsSynced,
       token: generateToken(user._id),
       isNewUser,
     });
@@ -362,6 +368,19 @@ const getSuggestedUsers = async (req, res) => {
   }
 };
 
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = { 
   sendOTP, 
   verifyOTP, 
@@ -374,5 +393,6 @@ module.exports = {
   verifyEmailOTP,
   toggleFollow,
   getSuggestedUsers,
-  checkUsername
+  checkUsername,
+  getMe
 };

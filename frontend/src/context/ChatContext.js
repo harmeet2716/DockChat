@@ -8,7 +8,7 @@ const ENDPOINT = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 let socket;
 
 export const ChatProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, updateUser } = useContext(AuthContext);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chats, setChats] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -209,6 +209,11 @@ export const ChatProvider = ({ children }) => {
           },
           body: JSON.stringify({ userId: matchedUser._id }),
         });
+      }
+      
+      // Update local user state to reflect that contacts are synced
+      if (updateUser) {
+        updateUser({ isContactsSynced: true });
       }
 
       fetchChats();

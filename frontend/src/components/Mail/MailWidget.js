@@ -87,39 +87,64 @@ export const MailWidget = () => {
   ];
 
   return (
-    <div className="flex-1 flex overflow-hidden bg-white">
-      {/* Column 1: Inbox List (30%) */}
-      <div className="w-[30%] min-w-[350px] border-r border-black/[0.05] flex flex-col bg-white">
-        {/* Search & Folder Toggle */}
-        <div className="p-4 space-y-4">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#075E54] transition" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search mail..."
-              className="w-full bg-slate-100 border-none rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[#075E54]/10 transition"
-            />
+    <div className="flex-1 flex overflow-hidden bg-[var(--bg-primary)] h-full">
+      {/* Column 1: Folders (Hidden on small mobile, Sidebar on Tablet/Desktop) */}
+      <div className="hidden lg:flex w-64 border-r border-white/5 flex-col bg-black/40 backdrop-blur-xl">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-8 h-8 bg-[var(--mail-accent)] rounded-lg shadow-lg rotate-12"></div>
+            <span className="text-sm font-black uppercase tracking-widest text-white italic">Mailbox</span>
           </div>
-          
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button 
-              onClick={() => setIsComposeOpen(true)}
-              className="flex-shrink-0 p-2.5 bg-[#25D366] text-white rounded-xl shadow-lg shadow-[#25D366]/20 hover:bg-[#128C7E] transition active:scale-95"
-            >
-              <Edit3 size={18} />
-            </button>
-            <div className="h-6 w-[1px] bg-slate-200 mx-1" />
+          <nav className="space-y-2">
             {folders.map(f => (
               <button
                 key={f.id}
                 onClick={() => setFolder(f.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  folder === f.id ? "bg-[#075E54] text-white" : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  folder === f.id ? "bg-white text-black shadow-xl scale-105" : "text-white/40 hover:text-white hover:bg-white/5"
                 }`}
               >
                 {f.icon} {f.label}
               </button>
             ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Column 2: Inbox List (Fluid) */}
+      <div className="w-full lg:w-[400px] border-r border-white/5 flex flex-col bg-[var(--bg-secondary)] shrink-0">
+        {/* Search & Folder Toggle (Mobile Only Toggle) */}
+        <div className="p-6 space-y-6">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--mail-accent)] transition" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search archives..."
+              className="w-full bg-black/40 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-sm text-white focus:ring-2 focus:ring-[var(--mail-accent)]/30 transition shadow-inner"
+            />
+          </div>
+          
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <button 
+              onClick={() => setIsComposeOpen(true)}
+              className="flex-shrink-0 p-3.5 bg-[var(--mail-accent)] text-white rounded-2xl shadow-xl shadow-[var(--mail-accent)]/20 hover:bg-[var(--mail-alert)] transition-all active:scale-95"
+            >
+              <Edit3 size={20} />
+            </button>
+            <div className="h-8 w-[1px] bg-white/10 mx-1" />
+            <div className="flex lg:hidden gap-3 overflow-x-auto scrollbar-hide">
+              {folders.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setFolder(f.id)}
+                  className={`flex-shrink-0 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                    folder === f.id ? "bg-white text-black shadow-lg" : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {f.icon} {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -139,64 +164,64 @@ export const MailWidget = () => {
               <button
                 key={mail._id}
                 onClick={() => setSelectedMail(mail)}
-                className={`w-full text-left p-5 border-b border-black/[0.02] hover:bg-[#f8f9fa] transition-all relative ${
-                  selectedMail?._id === mail._id ? "bg-[#f0f9f4] after:absolute after:left-0 after:top-0 after:bottom-0 after:w-1 after:bg-[#25D366]" : ""
+                className={`w-full text-left p-6 border-b border-white/5 hover:bg-white/[0.02] transition-all relative ${
+                  selectedMail?._id === mail._id ? "bg-white/[0.04] after:absolute after:left-0 after:top-0 after:bottom-0 after:w-1 after:bg-[var(--mail-accent)]" : ""
                 }`}
               >
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className={`text-sm ${mail.isRead ? "text-slate-600 font-medium" : "text-slate-900 font-black"}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className={`text-sm tracking-tight ${mail.isRead ? "text-white/40 font-medium" : "text-white font-black"}`}>
                     {mail.sender.name}
                   </h4>
-                  <span className="text-[10px] text-slate-400 font-bold">
+                  <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">
                     {new Date(mail.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <h5 className="text-xs font-bold text-[#075E54] truncate mb-1">{mail.subject}</h5>
-                <p className="text-[11px] text-slate-400 line-clamp-1">{mail.content}</p>
+                <h5 className="text-xs font-black text-[var(--mail-accent)] truncate mb-1 uppercase italic tracking-tighter">{mail.subject}</h5>
+                <p className="text-[11px] text-white/30 line-clamp-1 font-medium">{mail.content}</p>
               </button>
             ))
           )}
         </div>
       </div>
 
-      {/* Column 2: Reading Pane (70%) */}
-      <div className="flex-1 flex flex-col bg-slate-50/20">
+      {/* Column 3: Reading Pane (Fluid) */}
+      <div className="hidden lg:flex flex-1 flex-col bg-black overflow-hidden">
         {selectedMail ? (
-          <div className="flex-1 flex flex-col overflow-hidden bg-white">
-            <header className="p-8 border-b border-black/[0.03] flex items-center justify-between bg-white">
+          <div className="flex-1 flex flex-col overflow-hidden bg-black">
+            <header className="p-10 border-b border-white/5 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">{selectedMail.subject}</h2>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#075E54] text-white flex items-center justify-center font-bold text-xs">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tighter italic uppercase">{selectedMail.subject}</h2>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--mail-accent)] text-white flex items-center justify-center font-black text-sm shadow-lg shadow-[var(--mail-accent)]/20">
                     {selectedMail.sender.name[0]}
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-slate-900">{selectedMail.sender.name}</span>
-                    <span className="text-xs text-slate-400 font-medium ml-2">{`<${selectedMail.sender.email}>`}</span>
+                    <span className="text-sm font-black text-white tracking-tight">{selectedMail.sender.name}</span>
+                    <span className="text-xs text-white/30 font-bold ml-3 block sm:inline">{`<${selectedMail.sender.email}>`}</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200 transition flex items-center gap-2">
-                  <Reply size={14} /> Reply
+              <div className="flex items-center gap-3">
+                <button className="px-6 py-3 bg-white/5 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-white/10 transition flex items-center gap-2 border border-white/10">
+                  <Reply size={16} /> Reply
                 </button>
-                <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition"><StarIcon size={18} /></button>
-                <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition"><Trash2 size={18} /></button>
+                <button className="p-3 text-white/20 hover:text-white hover:bg-white/5 rounded-xl transition"><StarIcon size={20} /></button>
+                <button className="p-3 text-white/20 hover:text-rose-500 hover:bg-rose-500/5 rounded-xl transition"><Trash2 size={20} /></button>
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-12 max-w-4xl">
-              <div className="prose prose-slate prose-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">
+            <div className="flex-1 overflow-y-auto p-12 max-w-5xl mx-auto w-full">
+              <div className="text-white/80 leading-relaxed whitespace-pre-wrap font-medium text-base">
                 {selectedMail.content}
               </div>
             </div>
 
-            <footer className="p-8 border-t border-black/[0.03] flex gap-4">
-              <button className="px-6 py-3 bg-[#075E54] text-white font-bold rounded-xl text-sm flex items-center gap-2 hover:bg-[#128C7E] transition shadow-lg shadow-[#075E54]/10 active:scale-95">
-                <Reply size={18} /> Send Reply
+            <footer className="p-10 border-t border-white/5 flex gap-6 glass-dark">
+              <button className="px-8 py-4 bg-[var(--mail-accent)] text-white font-black uppercase tracking-widest rounded-2xl text-xs flex items-center gap-3 hover:bg-[var(--mail-alert)] transition shadow-2xl shadow-[var(--mail-accent)]/40 active:scale-95">
+                <Reply size={18} /> Transmit Response
               </button>
-              <button className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm flex items-center gap-2 hover:bg-slate-200 transition active:scale-95">
-                <Forward size={18} /> Forward
+              <button className="px-8 py-4 bg-white/5 text-white/60 font-black uppercase tracking-widest rounded-2xl text-xs flex items-center gap-3 hover:bg-white/10 transition active:scale-95 border border-white/5">
+                <Forward size={18} /> Forward Signal
               </button>
             </footer>
           </div>

@@ -1,5 +1,5 @@
 const express = require("express");
-const { sendOTP, verifyOTP, updateProfile, syncContacts, searchUsers, registerUser, loginUser, verifyEmailOTP, sendEmailOTP, toggleFollow, getSuggestedUsers, checkUsername } = require("../controllers/authController");
+const { sendOTP, verifyOTP, updateProfile, syncContacts, searchUsers, registerUser, loginUser, verifyEmailOTP, sendEmailOTP, toggleFollow, getSuggestedUsers, checkUsername, getMe } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -16,5 +16,6 @@ router.post("/verify-otp", verifyOTP);
 router.get("/search", protect, searchUsers);
 router.patch("/profile", protect, updateProfile);
 router.post("/sync-contacts", protect, syncContacts);
+router.get("/me", protect, getMe);
 
 module.exports = router;

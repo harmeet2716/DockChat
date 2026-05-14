@@ -145,6 +145,9 @@ const syncContacts = async (req, res) => {
       _id: { $ne: req.user._id } // Exclude current user
     }).select("name username profilePic email phoneNumber");
 
+    // Mark contacts as synced
+    await User.findByIdAndUpdate(req.user._id, { isContactsSynced: true });
+
     res.status(200).json(matchedUsers);
   } catch (error) {
     res.status(400).json({ message: error.message });

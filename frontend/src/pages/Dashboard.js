@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, Bell, MessageCircle, 
   MoreVertical, LogOut, Menu, X, 
-  Settings, User, LogOut as LogOutIcon, Mail
+  Settings, User, LogOut as LogOutIcon, Mail, MessageSquare
 } from "lucide-react";
 import { LeftSidebar } from "../components/Social/LeftSidebar";
 import { RightSidebar } from "../components/Social/RightSidebar";
@@ -40,7 +40,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("chats"); // chats or mail
   const [currentView, setCurrentView] = useState("list"); // list, chat, profile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSyncModalOpen, setIsSyncModalOpen] = useState(true);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(!user?.isContactsSynced);
 
   // Sync currentView with selectedChat
   useEffect(() => {
@@ -58,55 +58,60 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen bg-white font-sans selection:bg-[#25D366]/30 overflow-hidden flex flex-col">
+    <div className={`h-screen font-sans selection:bg-[var(--accent)]/30 overflow-hidden flex flex-col transition-colors duration-500 ${
+      activeTab === "chats" ? "theme-chat bg-[var(--bg-primary)]" : "theme-mail bg-[var(--bg-primary)]"
+    }`}>
       {/* Professional Hybrid Header */}
-      <header className="flex-shrink-0 bg-[#075E54] text-white shadow-md z-50">
-        <div className="max-w-full mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <header className={`flex-shrink-0 border-b border-white/5 backdrop-blur-md z-50 transition-all duration-500 ${
+        activeTab === "chats" ? "bg-black/40" : "bg-black/60"
+      }`}>
+        <div className="max-w-full mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <button 
-              className="md:hidden p-2 hover:bg-white/10 rounded-full transition"
+              className="md:hidden p-2 hover:bg-white/10 rounded-full transition text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-            <h1 className="text-xl font-bold tracking-tight">DockChat</h1>
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="DockChat" className="w-8 h-8 object-contain" />
+              <h1 className="text-xl font-black tracking-tighter text-white uppercase italic">DockChat</h1>
+            </div>
           </div>
 
-          <div className="flex h-full">
+          <div className="flex h-full items-center bg-white/5 rounded-full p-1 border border-white/10">
             <button
               onClick={() => setActiveTab("chats")}
-              className={`px-8 h-full text-xs font-bold uppercase tracking-widest transition-all relative ${
-                activeTab === "chats" ? "text-white" : "text-white/60 hover:text-white/80"
+              className={`px-8 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                activeTab === "chats" 
+                  ? "bg-[var(--chat-accent)] text-white shadow-lg shadow-black/20" 
+                  : "text-white/40 hover:text-white/60"
               }`}
             >
-              Chats
-              {activeTab === "chats" && (
-                <motion.div layoutId="headerTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#25D366]" />
-              )}
+              Stealth Chat
             </button>
             <button
               onClick={() => setActiveTab("mail")}
-              className={`px-8 h-full text-xs font-bold uppercase tracking-widest transition-all relative ${
-                activeTab === "mail" ? "text-white" : "text-white/60 hover:text-white/80"
+              className={`px-8 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                activeTab === "mail" 
+                  ? "bg-[var(--mail-accent)] text-white shadow-lg shadow-black/20" 
+                  : "text-white/40 hover:text-white/60"
               }`}
             >
-              Mail
-              {activeTab === "mail" && (
-                <motion.div layoutId="headerTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#ea4335]" />
-              )}
+              Night Mail
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="hidden sm:block p-2 hover:bg-white/10 rounded-full transition relative">
-              <Bell size={20} className="text-white/90" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#25D366] rounded-full border-2 border-[#075E54]"></span>
+          <div className="flex items-center gap-6">
+            <button className="hidden sm:block p-2 hover:bg-white/10 rounded-full transition relative text-white">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--accent)] rounded-full border-2 border-black"></span>
             </button>
-            <Link to="/settings" className="w-8 h-8 rounded-full bg-white/10 p-0.5 border border-white/20 hover:scale-110 transition-transform active:scale-95 cursor-pointer block overflow-hidden">
+            <Link to="/settings" className="w-10 h-10 rounded-full bg-white/5 p-0.5 border border-white/20 hover:scale-110 transition-all active:scale-95 cursor-pointer block overflow-hidden">
               {user?.profilePic ? (
                 <img src={user.profilePic} alt={user.username} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <div className="w-full h-full rounded-full bg-white/20 flex items-center justify-center font-bold text-xs uppercase">
+                <div className="w-full h-full rounded-full bg-white/10 flex items-center justify-center font-bold text-sm uppercase text-white">
                   {user?.username?.[0]}
                 </div>
               )}
@@ -117,9 +122,9 @@ export default function Dashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden relative">
-        {/* Column 1: List (Chats or Folders) */}
+        {/* Column 1: List (Chats) - Hidden on mobile if viewing chat/profile */}
         {(!isMobile || currentView === "list") && activeTab === "chats" && (
-          <div className={`${isMobile ? "w-full" : "w-[400px] border-r border-black/[0.05]"} bg-white flex flex-col z-10 transition-all`}>
+          <div className={`${isMobile ? "w-full" : "w-[400px] border-r border-white/5"} bg-[var(--bg-secondary)] flex flex-col z-10 transition-all`}>
             <LeftSidebar 
               activeTab={activeTab} 
               onSelectChat={(chat) => {
@@ -130,12 +135,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Content View: Chat Widget or Mail Widget */}
+        {/* Column 2: Chat/Mail Content */}
         <div className="flex-1 flex overflow-hidden relative z-0">
           {activeTab === "chats" ? (
             <div className="flex-1 flex overflow-hidden">
               {(!isMobile || currentView === "chat") && (
-                <div className="flex-1 flex flex-col bg-[#efe7dd] relative">
+                <div className="flex-1 flex flex-col relative">
                   <ChatWidget 
                     isMobile={isMobile} 
                     onBack={() => {
@@ -147,7 +152,7 @@ export default function Dashboard() {
                 </div>
               )}
               {(!isMobile || currentView === "profile") && (
-                <div className={`${isMobile ? "absolute inset-0 z-50" : "w-[350px] border-l border-black/[0.05]"} bg-white flex flex-col transition-all`}>
+                <div className={`${isMobile ? "absolute inset-0 z-50" : "w-[350px] border-l border-white/5"} bg-[var(--bg-secondary)] flex flex-col transition-all`}>
                   <RightSidebar 
                     isMobile={isMobile}
                     onBack={() => setCurrentView("chat")}
@@ -161,39 +166,32 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            className="fixed inset-0 bg-white z-[60] flex flex-col"
+      {/* Mobile-First Navigation */}
+      {isMobile && (
+        <div className="mobile-nav">
+          <button 
+            onClick={() => setActiveTab("chats")}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === "chats" ? "text-[var(--chat-accent)] scale-110" : "text-white/40"}`}
           >
-            <div className="p-6 bg-[#075E54] text-white flex items-center justify-between">
-              <h2 className="text-xl font-bold">Menu</h2>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition"><X /></button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4 mb-8 p-4 bg-slate-50 rounded-2xl">
-                <div className="w-16 h-16 rounded-full bg-[#075E54]/10 flex items-center justify-center text-2xl font-bold text-[#075E54]">
-                  {user?.name?.[0]}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">{user?.name}</h3>
-                  <p className="text-sm text-slate-500">{user?.username || "@user"}</p>
-                </div>
-              </div>
-              <Link to="/settings" className="w-full flex items-center gap-4 text-lg font-bold text-slate-700 p-4 hover:bg-slate-50 rounded-2xl transition">
-                <Settings size={24} /> Settings
-              </Link>
-              <button onClick={logout} className="w-full flex items-center gap-4 text-lg font-bold text-rose-500 p-4 hover:bg-rose-50 rounded-2xl transition">
-                <LogOutIcon size={24} /> Logout
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <MessageSquare size={20} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Chat</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab("mail")}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === "mail" ? "text-[var(--mail-accent)] scale-110" : "text-white/40"}`}
+          >
+            <Mail size={20} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Mail</span>
+          </button>
+          <Link 
+            to="/settings"
+            className="flex flex-col items-center gap-1 text-white/40"
+          >
+            <Settings size={20} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Intel</span>
+          </Link>
+        </div>
+      )}
 
       <ContactSyncModal 
         isOpen={isSyncModalOpen} 

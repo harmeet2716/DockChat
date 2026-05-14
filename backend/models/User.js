@@ -38,6 +38,7 @@ const UserSchema = new mongoose.Schema(
     },
     isSearchable: { type: Boolean, default: true },
     isProfileComplete: { type: Boolean, default: false },
+    isContactsSynced: { type: Boolean, default: false },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }

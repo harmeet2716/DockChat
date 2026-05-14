@@ -15,7 +15,7 @@ export const RightSidebar = ({ isMobile, onBack }) => {
   const mediaMessages = messages.filter(m => m.messageType === "image").slice(0, 6);
   const docMessages = messages.filter(m => m.messageType === "file" || m.messageType === "audio").slice(0, 3);
   return (
-    <aside className="flex flex-col h-full bg-white overflow-y-auto custom-scrollbar relative">
+    <aside className="flex flex-col h-full bg-[var(--bg-secondary)] overflow-y-auto custom-scrollbar relative">
       {isMobile && (
         <div className="sticky top-0 bg-white/80 backdrop-blur-md z-20 flex items-center gap-4 px-6 py-4 border-b border-black/[0.03]">
           <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:bg-black/5 rounded-full transition">
@@ -25,15 +25,15 @@ export const RightSidebar = ({ isMobile, onBack }) => {
         </div>
       )}
       {/* Contact Profile Detail */}
-      <div className="p-8 flex flex-col items-center border-b border-black/[0.03]">
-        <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-3xl font-bold text-[#075E54] border-4 border-slate-50 shadow-sm mb-4">
+      <div className="p-8 flex flex-col items-center border-b border-white/5">
+        <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center text-3xl font-black text-white border border-white/10 shadow-2xl mb-4 italic">
           {selectedChat ? (selectedChat.isGroupChat ? selectedChat.chatName[0] : selectedChat.users.find(u => u._id !== user._id)?.name[0]) : "U"}
         </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">
+        <h2 className="text-xl font-black text-white mb-1 uppercase tracking-tight italic">
           {selectedChat ? (selectedChat.isGroupChat ? selectedChat.chatName : selectedChat.users.find(u => u._id !== user._id)?.name) : "Contact Info"}
         </h2>
-        <p className="text-xs text-slate-500 font-medium">
-          {selectedChat?.isGroupChat ? `${selectedChat.users.length} members` : selectedChat?.users.find(u => u._id !== user._id)?.phoneNumber || "Active"}
+        <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">
+          {selectedChat?.isGroupChat ? `${selectedChat.users.length} members` : selectedChat?.users.find(u => u._id !== user._id)?.phoneNumber || "Signal Active"}
         </p>
       </div>
 
@@ -41,9 +41,11 @@ export const RightSidebar = ({ isMobile, onBack }) => {
       <div className="p-6 space-y-8">
         {/* About/Status */}
         <div>
-          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">About</h4>
-          <p className="text-sm text-slate-700 leading-relaxed font-medium">
-            Hey there! I am using DockChat. Professional focus, high-fidelity utility.
+          <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-3">About</h4>
+          <p className="text-sm text-white/80 leading-relaxed font-medium italic">
+            {selectedChat?.isGroupChat 
+              ? "Group communication channel." 
+              : (selectedChat?.users.find(u => u._id !== user._id)?.about || "No status available.")}
           </p>
         </div>
 
