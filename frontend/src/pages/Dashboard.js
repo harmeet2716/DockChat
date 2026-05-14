@@ -58,60 +58,66 @@ export default function Dashboard() {
   };
 
   return (
-    <div className={`h-screen font-sans selection:bg-[var(--accent)]/30 overflow-hidden flex flex-col transition-colors duration-500 ${
-      activeTab === "chats" ? "theme-chat bg-[var(--bg-primary)]" : "theme-mail bg-[var(--bg-primary)]"
+    <div className={`h-screen font-sans selection:bg-[var(--accent)]/30 overflow-hidden flex flex-col transition-colors duration-300 ${
+      activeTab === "chats" ? "theme-chat bg-[#f0f2f5]" : "theme-mail bg-white"
     }`}>
-      {/* Professional Hybrid Header */}
-      <header className={`flex-shrink-0 border-b border-white/5 backdrop-blur-md z-50 transition-all duration-500 ${
-        activeTab === "chats" ? "bg-black/40" : "bg-black/60"
+      {/* Traditional Header */}
+      <header className={`flex-shrink-0 shadow-md z-50 transition-all duration-300 ${
+        activeTab === "chats" ? "bg-[#075E54] text-white" : "bg-white text-slate-800 border-b border-slate-200"
       }`}>
         <div className="max-w-full mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button 
-              className="md:hidden p-2 hover:bg-white/10 rounded-full transition text-white"
+              className={`md:hidden p-2 rounded-full transition ${activeTab === "chats" ? "hover:bg-white/10 text-white" : "hover:bg-slate-100 text-slate-600"}`}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div className="flex items-center gap-3">
               <img src="/logo.png" alt="DockChat" className="w-8 h-8 object-contain" />
-              <h1 className="text-xl font-black tracking-tighter text-white uppercase italic">DockChat</h1>
+              <h1 className={`text-xl font-bold tracking-tight ${activeTab === "chats" ? "text-white" : "text-[#075E54]"}`}>DockChat</h1>
             </div>
           </div>
 
-          <div className="flex h-full items-center bg-white/5 rounded-full p-1 border border-white/10">
+          <div className="flex h-full items-center">
             <button
               onClick={() => setActiveTab("chats")}
-              className={`px-8 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+              className={`px-8 h-16 text-xs font-bold uppercase tracking-widest transition-all duration-300 relative ${
                 activeTab === "chats" 
-                  ? "bg-[var(--chat-accent)] text-white shadow-lg shadow-black/20" 
-                  : "text-white/40 hover:text-white/60"
+                  ? "text-white" 
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
-              Stealth Chat
+              Chats
+              {activeTab === "chats" && (
+                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#25D366]" />
+              )}
             </button>
             <button
               onClick={() => setActiveTab("mail")}
-              className={`px-8 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+              className={`px-8 h-16 text-xs font-bold uppercase tracking-widest transition-all duration-300 relative ${
                 activeTab === "mail" 
-                  ? "bg-[var(--mail-accent)] text-white shadow-lg shadow-black/20" 
-                  : "text-white/40 hover:text-white/60"
+                  ? "text-[#ea4335]" 
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
-              Night Mail
+              Mail
+              {activeTab === "mail" && (
+                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#ea4335]" />
+              )}
             </button>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button className="hidden sm:block p-2 hover:bg-white/10 rounded-full transition relative text-white">
+          <div className="flex items-center gap-4">
+            <button className={`hidden sm:block p-2 rounded-full transition relative ${activeTab === "chats" ? "hover:bg-white/10 text-white" : "hover:bg-slate-100 text-slate-600"}`}>
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--accent)] rounded-full border-2 border-black"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#25D366] rounded-full border-2 border-current"></span>
             </button>
-            <Link to="/settings" className="w-10 h-10 rounded-full bg-white/5 p-0.5 border border-white/20 hover:scale-110 transition-all active:scale-95 cursor-pointer block overflow-hidden">
+            <Link to="/settings" className="w-9 h-9 rounded-full bg-slate-200 p-0.5 border border-white/20 hover:scale-105 transition-all active:scale-95 cursor-pointer block overflow-hidden">
               {user?.profilePic ? (
                 <img src={user.profilePic} alt={user.username} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <div className="w-full h-full rounded-full bg-white/10 flex items-center justify-center font-bold text-sm uppercase text-white">
+                <div className="w-full h-full rounded-full bg-slate-300 flex items-center justify-center font-bold text-xs uppercase text-slate-600">
                   {user?.username?.[0]}
                 </div>
               )}

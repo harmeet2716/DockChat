@@ -74,17 +74,17 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-secondary)] border-r border-white/5 transition-all">
-      {/* Pinned Search Bar */}
-      <div className="flex-shrink-0 p-6 bg-[var(--bg-secondary)] border-b border-white/5">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200 transition-all">
+      {/* Search Bar */}
+      <div className="flex-shrink-0 p-4 bg-slate-50 border-b border-slate-100">
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--accent)] transition" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#075E54] transition" size={18} />
           <input 
             type="text" 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={activeTab === "chats" ? "Identify contact..." : "Index archives..."} 
-            className="w-full bg-black/40 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all shadow-inner"
+            placeholder={activeTab === "chats" ? "Search or start new chat" : "Search mail"} 
+            className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-12 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#25D366]/30 transition-all"
           />
         </div>
       </div>
@@ -96,9 +96,9 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="px-4 pb-4 border-b border-black/[0.05]"
+            className="px-4 pb-4 border-b border-slate-100"
           >
-            <h4 className="text-[10px] font-black text-[#25D366] uppercase tracking-widest mb-3">Global Result</h4>
+            <h4 className="text-[10px] font-bold text-[#25D366] uppercase tracking-widest mb-3 px-2">Global Result</h4>
             <div className="flex items-center gap-3 p-3 bg-[#f0f9f4] rounded-xl border border-[#25D366]/10">
               <div className="w-10 h-10 rounded-full bg-[#075E54]/10 flex items-center justify-center font-bold text-[#075E54]">
                 {searchResult.name[0]}
@@ -129,33 +129,33 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
       {/* Conditional List View */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {activeTab === "chats" ? (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-50">
             {chats.map((chat) => (
               <motion.button 
                 key={chat._id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={() => handleSelect(chat)}
-                className={`w-full flex items-center gap-4 px-6 py-5 transition-all relative group text-left border-l-4 ${
-                  selectedChat?._id === chat._id ? "bg-white/[0.03] border-l-[var(--accent)] shadow-inner" : "border-transparent hover:bg-white/[0.01]"
+                className={`w-full flex items-center gap-4 px-4 py-4 transition-all relative group text-left ${
+                  selectedChat?._id === chat._id ? "bg-slate-100" : "hover:bg-slate-50"
                 }`}
               >
                 <div className="relative flex-shrink-0">
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white/40 font-black border border-white/10 shadow-lg group-hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-[#075E54] font-bold border border-slate-100">
                     {getChatProfile(chat)}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[var(--bg-secondary)] shadow-sm"></div>
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="text-sm font-black text-white truncate tracking-tight uppercase italic">{getChatName(chat)}</h4>
-                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+                  <div className="flex justify-between items-baseline mb-0.5">
+                    <h4 className="text-sm font-bold text-slate-900 truncate">{getChatName(chat)}</h4>
+                    <span className="text-[10px] text-slate-400 font-medium">
                       {chat.latestMessage ? new Date(chat.latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-xs text-white/40 truncate font-medium">
-                      {chat.latestMessage ? chat.latestMessage.content : "Secure channel established..."}
+                    <p className="text-xs text-slate-500 truncate">
+                      {chat.latestMessage ? chat.latestMessage.content : "Tap to start chatting"}
                     </p>
                   </div>
                 </div>
@@ -163,22 +163,22 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
             ))}
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-50">
             {emails.map((mail) => (
               <button 
                 key={mail.id}
-                className="w-full flex items-start gap-4 px-6 py-5 hover:bg-white/[0.02] transition-all relative group text-left border-l-4 border-transparent hover:border-l-[var(--mail-accent)]"
+                className="w-full flex items-start gap-4 px-4 py-4 hover:bg-slate-50 transition-all relative group text-left border-l-4 border-transparent hover:border-l-[#ea4335]"
               >
                 <div className="flex-shrink-0 mt-1">
-                  <Star size={20} className={mail.starred ? "text-amber-500 fill-amber-500" : "text-white/10"} />
+                  <Star size={18} className={mail.starred ? "text-amber-400 fill-amber-400" : "text-slate-200"} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="text-sm font-black text-white truncate tracking-tight">{mail.sender}</h4>
-                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">{mail.time}</span>
+                  <div className="flex justify-between items-baseline mb-0.5">
+                    <h4 className="text-sm font-bold text-slate-900 truncate">{mail.sender}</h4>
+                    <span className="text-[10px] text-slate-400 font-medium">{mail.time}</span>
                   </div>
-                  <h5 className={`text-xs font-bold truncate mb-1 ${mail.important ? "text-[var(--mail-alert)]" : "text-white/80"}`}>{mail.subject}</h5>
-                  <p className="text-xs text-white/40 truncate line-clamp-1 italic font-medium">{mail.snippet}</p>
+                  <h5 className={`text-xs font-bold truncate mb-0.5 ${mail.important ? "text-[#ea4335]" : "text-slate-700"}`}>{mail.subject}</h5>
+                  <p className="text-xs text-slate-500 truncate line-clamp-1">{mail.snippet}</p>
                 </div>
               </button>
             ))}
@@ -186,12 +186,12 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
         )}
       </div>
 
-      {/* Global Bottom Navigation (Utility) */}
-      <div className="flex-shrink-0 flex p-4 glass-dark items-center justify-around text-white/20 border-t border-white/5">
-        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><Home size={22} /></button>
-        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><Users size={22} /></button>
-        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><FileText size={22} /></button>
-        <button className="p-3 hover:text-white hover:bg-white/5 rounded-xl transition-all"><Settings size={22} /></button>
+      {/* Bottom Actions */}
+      <div className="flex-shrink-0 flex p-3 bg-slate-50 items-center justify-around text-slate-400 border-t border-slate-100">
+        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><Home size={20} /></button>
+        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><Users size={20} /></button>
+        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><FileText size={20} /></button>
+        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><Settings size={20} /></button>
       </div>
     </div>
   );

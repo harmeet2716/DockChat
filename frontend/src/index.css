@@ -5,33 +5,37 @@
 @tailwind utilities;
 
 :root {
-  /* Stealth Gray Palette (Chat) */
-  --chat-bg: #121212;
-  --chat-bubble-out: #555555;
-  --chat-bubble-in: #2D2D2D;
-  --chat-text: #E0E0E0;
-  --chat-accent: #555555;
-  --chat-border: rgba(255, 255, 255, 0.05);
+  /* WhatsApp Inspired Palette */
+  --chat-bg: #ffffff;
+  --chat-header: #075E54;
+  --chat-accent: #25D366;
+  --chat-bubble-out: #dcf8c6;
+  --chat-bubble-in: #ffffff;
+  --chat-text: #111b21;
+  --chat-border: rgba(0, 0, 0, 0.1);
 
-  /* Dark Crimson Palette (Mail) */
-  --mail-bg: #000000;
-  --mail-accent: #800000;
-  --mail-alert: #B22222;
-  --mail-text: #FFFFFF;
-  --mail-border: rgba(128, 0, 0, 0.2);
+  /* Gmail Inspired Palette */
+  --mail-bg: #ffffff;
+  --mail-accent: #ea4335;
+  --mail-text: #202124;
+  --mail-border: #f1f3f4;
 
   /* Shared Design Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f2f5;
+  --text-primary: #111b21;
+  --text-secondary: #667781;
+  --accent: #25D366;
+  --border: rgba(0, 0, 0, 0.08);
+  --transition-smooth: all 0.2s ease-in-out;
 }
 
 .theme-chat {
   --bg-primary: var(--chat-bg);
-  --bg-secondary: #1a1a1a;
+  --bg-secondary: #f0f2f5;
   --text-primary: var(--chat-text);
-  --text-secondary: #a0a0a0;
-  --accent: var(--chat-accent);
+  --text-secondary: #667781;
+  --accent: var(--chat-header);
   --border: var(--chat-border);
   --bubble-bg: var(--chat-bubble-in);
   --bubble-text: var(--chat-text);
@@ -39,13 +43,13 @@
 
 .theme-mail {
   --bg-primary: var(--mail-bg);
-  --bg-secondary: #0a0a0a;
+  --bg-secondary: #f1f3f4;
   --text-primary: var(--mail-text);
-  --text-secondary: #d0d0d0;
+  --text-secondary: #5f6368;
   --accent: var(--mail-accent);
   --border: var(--mail-border);
   --bubble-bg: var(--mail-accent);
-  --bubble-text: var(--mail-text);
+  --bubble-text: #ffffff;
 }
 
 body {
@@ -55,7 +59,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #ffffff;
+  background-color: #f0f2f5;
   color: #111b21;
 }
 

@@ -37,65 +37,61 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
   }, [selectedChat, messages]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-primary)] relative">
-      {/* Dynamic Theme Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-[var(--accent)]/5 pointer-events-none"></div>
-
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-whatsapp-pattern relative">
       {/* Active Chat Header */}
-      <header className="flex-shrink-0 h-20 glass-dark border-b border-white/5 flex items-center justify-between px-6 z-10">
-        <div className="flex items-center gap-4 cursor-pointer overflow-hidden">
+      <header className="flex-shrink-0 h-16 bg-[#f0f2f5] border-b border-slate-200 flex items-center justify-between px-4 z-10">
+        <div className="flex items-center gap-3 cursor-pointer overflow-hidden">
           {isMobile && (
-            <button onClick={onBack} className="p-2 -ml-2 text-white/60 hover:bg-white/5 rounded-full transition">
+            <button onClick={onBack} className="p-2 -ml-2 text-slate-600 hover:bg-slate-200 rounded-full transition">
               <ChevronLeft size={24} />
             </button>
           )}
-          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center font-black text-xl text-white border border-white/10 shrink-0 shadow-lg">
+          <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-600 border border-slate-200 shrink-0">
             {getChatProfile(selectedChat)}
           </div>
           <div className="min-w-0" onClick={isMobile ? onShowInfo : undefined}>
-            <h3 className="text-base font-black text-white truncate tracking-tight">{getChatName(selectedChat)}</h3>
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${isTyping ? "bg-white animate-pulse" : "bg-emerald-500"}`}></span>
-              <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">
-                {isTyping ? "typing..." : "secure connection"}
-              </p>
-            </div>
+            <h3 className="text-sm font-bold text-slate-900 truncate">{getChatName(selectedChat)}</h3>
+            <p className="text-[10px] text-slate-500 font-medium">
+              {isTyping ? "typing..." : "online"}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="hidden sm:block p-2.5 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition"><Video size={20} /></button>
-          <button className="hidden sm:block p-2.5 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition"><Phone size={18} /></button>
-          <button onClick={onShowInfo} className="p-2.5 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition"><Info size={20} /></button>
-          <div className="w-px h-6 bg-white/10 mx-2" />
+        <div className="flex items-center gap-1">
+          <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Video size={20} /></button>
+          <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Phone size={18} /></button>
+          <button onClick={onShowInfo} className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Info size={20} /></button>
+          <div className="w-px h-6 bg-slate-200 mx-1" />
           <button 
             title="Convert to Mail"
-            className="p-2.5 text-[var(--accent)] hover:scale-110 transition-all"
+            className="p-2 text-[#075E54] hover:bg-[#075E54]/5 rounded-full transition-all"
             onClick={() => {
               const transcript = messages.map(m => `${m.sender.name}: ${m.content}`).join('\n');
               localStorage.setItem("dockchat_bridge_content", transcript);
               alert("Conversation captured! Go to the MAIL tab and click Compose to see the transcript.");
             }}
           >
-            <Mail size={22} />
+            <Mail size={20} />
           </button>
         </div>
       </header>
 
       {/* Message Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-2 relative z-0">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-2 relative z-0 scrollbar-hide">
         {!selectedChat ? (
-          <div className="flex-1 flex items-center justify-center text-slate-400">
-            Select a chat to start messaging
+          <div className="flex-1 flex items-center justify-center text-slate-400 bg-white/80 backdrop-blur-sm">
+            <div className="text-center">
+              <MessageCircle size={48} className="mx-auto mb-4 opacity-20" />
+              <p className="text-sm font-medium">Select a chat to start messaging</p>
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
-              <MessageCircle size={32} className="text-[#25D366]/40" />
+            <div className="w-16 h-16 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center mb-4 shadow-sm">
+              <MessageCircle size={32} className="text-[#075E54]/20" />
             </div>
             <p className="text-sm font-medium text-slate-600 mb-1">
-              This is the start of your conversation with <span className="text-[#075E54] font-bold">{getChatName(selectedChat)}</span>
+              Start a conversation with <span className="text-[#075E54] font-bold">{getChatName(selectedChat)}</span>
             </p>
-            <p className="text-xs">Say hi to start chatting!</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -108,27 +104,27 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
                 className={`flex ${isSentByMe ? "justify-end" : "justify-start"} mb-1`}
               >
                 <div 
-                   className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-premium relative text-sm font-medium ${
+                   className={`max-w-[85%] sm:max-w-[70%] px-3 py-1.5 rounded-lg shadow-sm relative text-[13px] leading-relaxed ${
                     isSentByMe 
-                      ? "bg-[var(--accent)] text-white rounded-tr-none border border-white/10" 
-                      : "bg-[var(--bubble-bg)] text-[var(--text-primary)] rounded-tl-none border border-white/5"
+                      ? "bg-[#dcf8c6] text-slate-900 rounded-tr-none" 
+                      : "bg-white text-slate-900 rounded-tl-none"
                   }`}
                 >
                   <div className={`absolute top-0 w-2 h-2 ${
                     isSentByMe 
-                      ? "right-[-8px] border-l-[8px] border-l-[var(--accent)] border-b-[8px] border-b-transparent" 
-                      : "left-[-8px] border-r-[8px] border-r-[var(--bubble-bg)] border-b-[8px] border-b-transparent"
+                      ? "right-[-8px] border-l-[8px] border-l-[#dcf8c6] border-b-[8px] border-b-transparent" 
+                      : "left-[-8px] border-r-[8px] border-r-white border-b-[8px] border-b-transparent"
                   }`}></div>
                   
-                  <p className="pr-12">{msg.content}</p>
-                  <div className="mt-1 flex items-center justify-end gap-1.5 opacity-60">
-                    <span className="text-[8px] font-black uppercase tracking-widest">
+                  <p className="pr-10">{msg.content}</p>
+                  <div className="mt-1 flex items-center justify-end gap-1 opacity-50">
+                    <span className="text-[9px] font-medium">
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isSentByMe && (
                       msg.status === "read"
-                        ? <CheckCheck size={12} className="text-[var(--accent)]" />
-                        : <CheckCheck size={12} className="text-white/40" />
+                        ? <CheckCheck size={14} className="text-[#34b7f1]" />
+                        : <CheckCheck size={14} className="text-slate-400" />
                     )}
                   </div>
                 </div>
@@ -140,13 +136,13 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
       </div>
 
       {/* Bottom Input Bar */}
-      <footer className="flex-shrink-0 glass-dark p-6 flex items-center gap-4 z-10 border-t border-white/5">
-        <div className="flex items-center gap-2">
-          <button className="p-2.5 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition"><Smile size={24} /></button>
-          <button className="p-2.5 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition"><Paperclip size={24} /></button>
+      <footer className="flex-shrink-0 bg-[#f0f2f5] p-3 flex items-center gap-2 z-10 border-t border-slate-200">
+        <div className="flex items-center gap-1">
+          <button className="p-2 text-slate-500 hover:text-slate-700 rounded-full transition"><Smile size={24} /></button>
+          <button className="p-2 text-slate-500 hover:text-slate-700 rounded-full transition"><Paperclip size={24} /></button>
         </div>
         <form 
-          className="flex-1 flex gap-4 items-center"
+          className="flex-1 flex gap-2 items-center"
           onSubmit={(e) => {
             e.preventDefault();
             if (messageText.trim()) {
@@ -155,21 +151,19 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
             }
           }}
         >
-          <div className="flex-1 bg-white/5 rounded-2xl overflow-hidden border border-white/10 shadow-inner group">
-            <input 
-              type="text" 
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Communicate securely..."
-              className="w-full px-6 py-4 text-sm bg-transparent text-white focus:outline-none placeholder:text-white/20 transition-all focus:bg-white/[0.08]"
-            />
-          </div>
+          <input 
+            type="text" 
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            placeholder="Type a message"
+            className="flex-1 px-4 py-2 text-sm bg-white text-slate-800 rounded-full focus:outline-none placeholder:text-slate-400 shadow-sm"
+          />
           <button 
             type="submit"
             disabled={!messageText.trim()}
-            className="w-14 h-14 bg-[var(--accent)] text-white rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl shadow-black/40 disabled:opacity-30 disabled:grayscale"
+            className="w-10 h-10 bg-[#075E54] text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
           >
-            {messageText.trim() ? <Send size={24} className="ml-0.5" /> : <Mic size={24} />}
+            {messageText.trim() ? <Send size={20} className="ml-0.5" /> : <Mic size={20} />}
           </button>
         </form>
       </footer>
