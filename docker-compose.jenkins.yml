@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: dockchat-jenkins
+    user: root # Needed to access the mounted Docker socket file on the host
+    ports:
+      - "8080:8080"  # Jenkins Web UI
+      - "50000:50000" # Jenkins Agent Port (if mounting slave nodes)
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Bind the host's Docker socket to Jenkins
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Optional: Mount the host's Docker client binary inside the container
+      - /usr/bin/docker:/usr/bin/docker
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+    driver: local
