@@ -58,66 +58,66 @@ export default function Dashboard() {
   };
 
   return (
-    <div className={`h-screen font-sans selection:bg-[var(--accent)]/30 overflow-hidden flex flex-col transition-colors duration-300 ${
-      activeTab === "chats" ? "theme-chat bg-[#f0f2f5]" : "theme-mail bg-white"
+    <div className={`h-screen font-sans selection:bg-[var(--accent)]/30 overflow-hidden flex flex-col transition-colors duration-500 ${
+      activeTab === "chats" ? "theme-chat bg-[#f0f2f5]" : "theme-mail bg-[#f8fafc]"
     }`}>
-      {/* Traditional Header */}
-      <header className={`flex-shrink-0 shadow-md z-50 transition-all duration-300 ${
-        activeTab === "chats" ? "bg-[#075E54] text-white" : "bg-white text-slate-800 border-b border-slate-200"
+      {/* Professional Hybrid Header - Landing Page Themed */}
+      <header className={`flex-shrink-0 shadow-md z-50 transition-all duration-500 ${
+        activeTab === "chats" ? "bg-[#075E54] text-white" : "bg-[#ea4335] text-white"
       }`}>
         <div className="max-w-full mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button 
-              className={`md:hidden p-2 rounded-full transition ${activeTab === "chats" ? "hover:bg-white/10 text-white" : "hover:bg-slate-100 text-slate-600"}`}
+              className="md:hidden p-2 hover:bg-white/10 rounded-full transition text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="DockChat" className="w-8 h-8 object-contain" />
-              <h1 className={`text-xl font-bold tracking-tight ${activeTab === "chats" ? "text-white" : "text-[#075E54]"}`}>DockChat</h1>
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center p-1 shadow-sm">
+                <span className={`font-black text-xs ${activeTab === "chats" ? "text-[#075E54]" : "text-[#ea4335]"}`}>DC</span>
+              </div>
+              <span className="text-xl font-bold tracking-tight text-white">DockChat</span>
             </div>
           </div>
 
-          <div className="flex h-full items-center">
+          <div className="flex h-11 items-center bg-white/10 rounded-full p-1 border border-white/20 shadow-inner">
             <button
               onClick={() => setActiveTab("chats")}
-              className={`px-8 h-16 text-xs font-bold uppercase tracking-widest transition-all duration-300 relative ${
+              className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
                 activeTab === "chats" 
-                  ? "text-white" 
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-white text-[#075E54] shadow-md scale-105" 
+                  : "text-white/80 hover:text-white hover:bg-white/5"
               }`}
             >
-              Chats
-              {activeTab === "chats" && (
-                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#25D366]" />
-              )}
+              IM Chats
             </button>
             <button
               onClick={() => setActiveTab("mail")}
-              className={`px-8 h-16 text-xs font-bold uppercase tracking-widest transition-all duration-300 relative ${
+              className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
                 activeTab === "mail" 
-                  ? "text-[#ea4335]" 
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-white text-[#ea4335] shadow-md scale-105" 
+                  : "text-white/80 hover:text-white hover:bg-white/5"
               }`}
             >
-              Mail
-              {activeTab === "mail" && (
-                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#ea4335]" />
-              )}
+              Inbox Mail
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className={`hidden sm:block p-2 rounded-full transition relative ${activeTab === "chats" ? "hover:bg-white/10 text-white" : "hover:bg-slate-100 text-slate-600"}`}>
+          <div className="flex items-center gap-6">
+            <button className="hidden sm:block p-2 hover:bg-white/10 rounded-full transition relative text-white">
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#25D366] rounded-full border-2 border-current"></span>
+              <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white ${
+                activeTab === "chats" ? "bg-[#25D366]" : "bg-white"
+              }`}></span>
             </button>
-            <Link to="/settings" className="w-9 h-9 rounded-full bg-slate-200 p-0.5 border border-white/20 hover:scale-105 transition-all active:scale-95 cursor-pointer block overflow-hidden">
+            <Link to="/settings" className="w-10 h-10 rounded-full bg-white/10 p-0.5 border border-white/30 hover:scale-110 transition-all active:scale-95 cursor-pointer block overflow-hidden">
               {user?.profilePic ? (
                 <img src={user.profilePic} alt={user.username} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <div className="w-full h-full rounded-full bg-slate-300 flex items-center justify-center font-bold text-xs uppercase text-slate-600">
+                <div className={`w-full h-full rounded-full flex items-center justify-center font-bold text-sm uppercase bg-white ${
+                  activeTab === "chats" ? "text-[#075E54]" : "text-[#ea4335]"
+                }`}>
                   {user?.username?.[0]}
                 </div>
               )}

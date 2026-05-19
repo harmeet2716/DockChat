@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-  /* WhatsApp Inspired Palette */
+  /* WhatsApp Inspired Palette (Light Chat) */
   --chat-bg: #ffffff;
   --chat-header: #075E54;
   --chat-accent: #25D366;
@@ -14,20 +14,17 @@
   --chat-text: #111b21;
   --chat-border: rgba(0, 0, 0, 0.1);
 
-  /* Gmail Inspired Palette */
+  /* Google Red / Gmail Inspired Palette (Light Email) */
   --mail-bg: #ffffff;
   --mail-accent: #ea4335;
-  --mail-text: #202124;
-  --mail-border: #f1f3f4;
+  --mail-alert: #d93025;
+  --mail-text: #111b21;
+  --mail-border: rgba(0, 0, 0, 0.08);
 
   /* Shared Design Tokens */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f0f2f5;
-  --text-primary: #111b21;
-  --text-secondary: #667781;
-  --accent: #25D366;
-  --border: rgba(0, 0, 0, 0.08);
-  --transition-smooth: all 0.2s ease-in-out;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .theme-chat {
@@ -43,9 +40,9 @@
 
 .theme-mail {
   --bg-primary: var(--mail-bg);
-  --bg-secondary: #f1f3f4;
+  --bg-secondary: #f8fafc;
   --text-primary: var(--mail-text);
-  --text-secondary: #5f6368;
+  --text-secondary: #64748b;
   --accent: var(--mail-accent);
   --border: var(--mail-border);
   --bubble-bg: var(--mail-accent);

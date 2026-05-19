@@ -97,6 +97,5 @@ export const RightSidebar = ({ isMobile, onBack }) => {
         </p>
       </div>
     </aside>
-    </aside>
   );
 };
