@@ -55,9 +55,12 @@ pipeline {
                 }
 
                 stage('Build Frontend Bundle') {
+                    environment {
+                        CI = 'false'
+                    }
                     steps {
                         dir('frontend') {
-                            bat 'set CI=false && npm run build'
+                            bat 'npm run build'
                         }
                     }
                 }
