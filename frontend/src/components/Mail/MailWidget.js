@@ -14,10 +14,19 @@ export const MailWidget = () => {
   const [mails, setMails] = useState([]);
   const [selectedMail, setSelectedMail] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isComposeOpen, setIsComposeOpen] = useState(false);
-  const [composeBody, setComposeBody] = useState("");
-  const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("");
+  const [isComposeOpen, setIsComposeOpen] = useState(() => {
+    return !!(localStorage.getItem("dockchat_bridge_to") || localStorage.getItem("dockchat_bridge_content"));
+  });
+  const [composeBody, setComposeBody] = useState(() => {
+    const content = localStorage.getItem("dockchat_bridge_content");
+    return content ? `--- Captured Chat Transcript ---\n\n${content}\n\n-------------------------------` : "";
+  });
+  const [to, setTo] = useState(() => {
+    return localStorage.getItem("dockchat_bridge_to") || "";
+  });
+  const [subject, setSubject] = useState(() => {
+    return localStorage.getItem("dockchat_bridge_subject") || "";
+  });
 
   const handleSendMail = async () => {
     if (!to || !subject || !composeBody) return;
@@ -71,30 +80,13 @@ export const MailWidget = () => {
   }, [folder]);
 
   useEffect(() => {
-    const bridgeTo = localStorage.getItem("dockchat_bridge_to");
-    const bridgeContent = localStorage.getItem("dockchat_bridge_content");
-    if (bridgeTo || bridgeContent) {
-      setIsComposeOpen(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isComposeOpen) {
-      const bridgeContent = localStorage.getItem("dockchat_bridge_content");
-      if (bridgeContent) {
-        setComposeBody(`--- Captured Chat Transcript ---\n\n${bridgeContent}\n\n-------------------------------`);
-        localStorage.removeItem("dockchat_bridge_content");
-      }
-      const bridgeTo = localStorage.getItem("dockchat_bridge_to");
-      if (bridgeTo) {
-        setTo(bridgeTo);
-        localStorage.removeItem("dockchat_bridge_to");
-      }
-      const bridgeSubject = localStorage.getItem("dockchat_bridge_subject");
-      if (bridgeSubject) {
-        setSubject(bridgeSubject);
-        localStorage.removeItem("dockchat_bridge_subject");
-      }
+    if (!isComposeOpen) {
+      setComposeBody("");
+      setTo("");
+      setSubject("");
+      localStorage.removeItem("dockchat_bridge_content");
+      localStorage.removeItem("dockchat_bridge_to");
+      localStorage.removeItem("dockchat_bridge_subject");
     }
   }, [isComposeOpen]);
 

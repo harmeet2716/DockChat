@@ -67,7 +67,12 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
             onClick={() => {
               const otherUser = selectedChat?.users?.find(u => u._id !== user._id);
               const email = otherUser?.email || "";
-              const transcript = messages.map(m => `${m.sender.name}: ${m.content}`).join('\n');
+              const transcript = messages
+                .map(m => {
+                  const senderName = m.sender?.name || (m.sender === user._id ? user.name : "User");
+                  return `${senderName}: ${m.content || ""}`;
+                })
+                .join('\n');
               
               localStorage.setItem("dockchat_bridge_content", transcript);
               localStorage.setItem("dockchat_bridge_to", email);
