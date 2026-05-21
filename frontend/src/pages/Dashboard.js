@@ -161,6 +161,9 @@ export default function Dashboard() {
                         setIsRightSidebarOpen(!isRightSidebarOpen);
                       }
                     }}
+                    onNavigateToMail={() => {
+                      setActiveTab("mail");
+                    }}
                   />
                 </div>
               )}
