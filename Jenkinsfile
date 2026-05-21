@@ -8,6 +8,13 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                echo 'Cloning repository from GitHub...'
+                git branch: 'main', url: 'https://github.com/harmeet2716/DockChat.git'
+            }
+        }
+
         stage('Diagnostics & Check') {
             steps {
                 echo 'Checking environments...'
@@ -22,7 +29,7 @@ pipeline {
                 stage('Backend Setup') {
                     steps {
                         dir('backend') {
-                            bat 'npm ci'
+                            bat 'npm install'
                         }
                     }
                 }
