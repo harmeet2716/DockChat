@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Smile, Paperclip, Mic, Send, 
   MoreVertical, Phone, Video, Search,
-  Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail
+  Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail, Loader2
 } from "lucide-react";
 
 export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) => {
@@ -13,6 +13,56 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
   const { selectedChat, messages, sendMessage, isTyping } = useContext(ChatContext);
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+      const res = await fetch(`${backendUrl}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload file");
+      }
+
+      const data = await res.json();
+      
+      // Determine messageType
+      let messageType = "file";
+      const mime = file.type;
+      if (mime.startsWith("image/")) {
+        messageType = "image";
+      } else if (mime.startsWith("video/")) {
+        messageType = "video";
+      } else if (mime.startsWith("audio/")) {
+        messageType = "audio";
+      }
+
+      // Send the file message
+      await sendMessage(file.name, messageType, data.url);
+    } catch (err) {
+      console.error("Error uploading file:", err);
+      alert("Error uploading file. Please try again.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   const getChatName = (chat) => {
     if (!chat) return "";
@@ -129,7 +179,41 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
                       : "left-[-8px] border-r-[8px] border-r-white border-b-[8px] border-b-transparent"
                   }`}></div>
                   
-                  <p className="pr-10">{msg.content}</p>
+                  {msg.messageType === "image" && msg.mediaUrl ? (
+                    <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 shadow-sm bg-slate-50">
+                      <img 
+                        src={msg.mediaUrl} 
+                        alt={msg.content} 
+                        className="w-full h-auto object-cover max-h-60 cursor-zoom-in hover:opacity-95 transition" 
+                        onClick={() => window.open(msg.mediaUrl, '_blank')} 
+                      />
+                    </div>
+                  ) : msg.messageType === "video" && msg.mediaUrl ? (
+                    <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 bg-slate-900 shadow-sm">
+                      <video src={msg.mediaUrl} controls className="w-full max-h-60" />
+                    </div>
+                  ) : msg.messageType === "audio" && msg.mediaUrl ? (
+                    <div className="mb-1 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 p-2 shadow-sm flex items-center gap-2 max-w-xs">
+                      <audio src={msg.mediaUrl} controls className="w-full scale-90" />
+                    </div>
+                  ) : msg.messageType === "file" && msg.mediaUrl ? (
+                    <a 
+                      href={msg.mediaUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="mb-1 flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/60 transition max-w-xs text-slate-800 decoration-none no-underline block"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-[#075E54] text-white flex items-center justify-center shrink-0">
+                        <Paperclip size={20} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold truncate pr-1 text-slate-800">{msg.content || "Attachment"}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Click to open / download</p>
+                      </div>
+                    </a>
+                  ) : (
+                    <p className="pr-10">{msg.content}</p>
+                  )}
                   <div className="mt-1 flex items-center justify-end gap-1 opacity-50">
                     <span className="text-[9px] font-medium">
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -151,8 +235,21 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
       {/* Bottom Input Bar */}
       <footer className="flex-shrink-0 bg-[#f0f2f5] p-3 flex items-center gap-2 z-10 border-t border-slate-200">
         <div className="flex items-center gap-1">
-          <button className="p-2 text-slate-500 hover:text-slate-700 rounded-full transition"><Smile size={24} /></button>
-          <button className="p-2 text-slate-500 hover:text-slate-700 rounded-full transition"><Paperclip size={24} /></button>
+          <button type="button" className="p-2 text-slate-500 hover:text-slate-700 rounded-full transition"><Smile size={24} /></button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            style={{ display: "none" }} 
+          />
+          <button 
+            type="button" 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition disabled:opacity-50"
+          >
+            {isUploading ? <Loader2 className="animate-spin text-[#075E54]" size={24} /> : <Paperclip size={24} />}
+          </button>
         </div>
         <form 
           className="flex-1 flex gap-2 items-center"
