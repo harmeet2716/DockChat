@@ -114,7 +114,7 @@ export const MailWidget = () => {
       </div>
 
       {/* Column 2: Inbox List (Fluid) */}
-      <div className="w-full lg:w-[400px] border-r border-slate-200/60 flex flex-col bg-[var(--bg-secondary)] shrink-0">
+      <div className={`w-full lg:w-[400px] border-r border-slate-200/60 flex-col bg-[var(--bg-secondary)] shrink-0 ${selectedMail ? "hidden lg:flex" : "flex"}`}>
         {/* Search & Folder Toggle (Mobile Only Toggle) */}
         <div className="p-6 space-y-6">
           <div className="relative group">
@@ -191,12 +191,18 @@ export const MailWidget = () => {
       </div>
 
       {/* Column 3: Reading Pane (Fluid) */}
-      <div className="hidden lg:flex flex-1 flex-col bg-white overflow-hidden">
+      <div className={`flex-grow flex-col bg-white overflow-hidden ${selectedMail ? "flex" : "hidden lg:flex"}`}>
         {selectedMail ? (
           <div className="flex-1 flex flex-col overflow-hidden bg-white">
-            <header className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">{selectedMail.subject}</h2>
+            <header className="p-6 sm:p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between bg-slate-50/50 gap-4">
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => setSelectedMail(null)} 
+                  className="lg:hidden self-start flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition"
+                >
+                  <ChevronRight className="rotate-180" size={16} /> Back to Inbox
+                </button>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1 tracking-tight">{selectedMail.subject}</h2>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-[#ea4335] text-white flex items-center justify-center font-bold text-sm shadow-md shadow-rose-500/10">
                     {selectedMail.sender.name[0]}
