@@ -75,17 +75,17 @@ pipeline {
                 bat 'echo %DOCKER_CREDS_PSW% | docker login -u %DOCKER_CREDS_USR% --password-stdin %REGISTRY%'
 
                 dir('backend') {
-                    bat "docker build -t ${DOCKER_USER}/${APP_NAME}-backend:latest ."
-                    bat "docker build -t ${DOCKER_USER}/${APP_NAME}-backend:${BUILD_NUMBER} ."
-                    bat "docker push ${DOCKER_USER}/${APP_NAME}-backend:latest"
-                    bat "docker push ${DOCKER_USER}/${APP_NAME}-backend:${BUILD_NUMBER}"
+                    bat 'docker build -t %DOCKER_USER%/%APP_NAME%-backend:latest .'
+                    bat 'docker build -t %DOCKER_USER%/%APP_NAME%-backend:%BUILD_NUMBER% .'
+                    bat 'docker push %DOCKER_USER%/%APP_NAME%-backend:latest'
+                    bat 'docker push %DOCKER_USER%/%APP_NAME%-backend:%BUILD_NUMBER%'
                 }
 
                 dir('frontend') {
-                    bat "docker build -t ${DOCKER_USER}/${APP_NAME}-frontend:latest ."
-                    bat "docker build -t ${DOCKER_USER}/${APP_NAME}-frontend:${BUILD_NUMBER} ."
-                    bat "docker push ${DOCKER_USER}/${APP_NAME}-frontend:latest"
-                    bat "docker push ${DOCKER_USER}/${APP_NAME}-frontend:${BUILD_NUMBER}"
+                    bat 'docker build -t %DOCKER_USER%/%APP_NAME%-frontend:latest .'
+                    bat 'docker build -t %DOCKER_USER%/%APP_NAME%-frontend:%BUILD_NUMBER% .'
+                    bat 'docker push %DOCKER_USER%/%APP_NAME%-frontend:latest'
+                    bat 'docker push %DOCKER_USER%/%APP_NAME%-frontend:%BUILD_NUMBER%'
                 }
             }
         }
