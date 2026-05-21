@@ -36,6 +36,7 @@ export default function Dashboard() {
   const { selectedChat, setSelectedChat, syncContacts } = useContext(ChatContext);
   const { width } = useWindowSize();
   const isMobile = width < 768;
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(!isMobile);
 
   const [activeTab, setActiveTab] = useState("chats"); // chats or mail
   const [currentView, setCurrentView] = useState("list"); // list, chat, profile
@@ -153,18 +154,48 @@ export default function Dashboard() {
                       setSelectedChat(null);
                       setCurrentView("list");
                     }}
-                    onShowInfo={() => setCurrentView("profile")}
+                    onShowInfo={() => {
+                      if (isMobile) {
+                        setCurrentView("profile");
+                      } else {
+                        setIsRightSidebarOpen(!isRightSidebarOpen);
+                      }
+                    }}
+                    onNavigateToMail={() => {
+                      setActiveTab("mail");
+                    }}
                   />
                 </div>
               )}
-              {(!isMobile || currentView === "profile") && (
-                <div className={`${isMobile ? "absolute inset-0 z-50" : "w-[350px] border-l border-white/5"} bg-[var(--bg-secondary)] flex flex-col transition-all`}>
-                  <RightSidebar 
-                    isMobile={isMobile}
-                    onBack={() => setCurrentView("chat")}
-                  />
-                </div>
-              )}
+              <AnimatePresence>
+                {((!isMobile && isRightSidebarOpen) || (isMobile && currentView === "profile")) && (
+                  <motion.div 
+                    initial={isMobile ? { x: "100%" } : { width: 0, opacity: 0 }}
+                    animate={isMobile ? { x: 0 } : { width: 350, opacity: 1 }}
+                    exit={isMobile ? { x: "100%" } : { width: 0, opacity: 0 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                    className={`${isMobile ? "absolute inset-0 z-50" : "w-[350px] border-l border-slate-200 shrink-0"} bg-white flex flex-col overflow-hidden`}
+                  >
+                    <RightSidebar 
+                      isMobile={isMobile}
+                      onBack={() => {
+                        if (isMobile) {
+                          setCurrentView("chat");
+                        } else {
+                          setIsRightSidebarOpen(false);
+                        }
+                      }}
+                      onClose={() => {
+                        if (isMobile) {
+                          setCurrentView("chat");
+                        } else {
+                          setIsRightSidebarOpen(false);
+                        }
+                      }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <MailWidget />

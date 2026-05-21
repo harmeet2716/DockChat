@@ -8,7 +8,7 @@ import {
   Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail
 } from "lucide-react";
 
-export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
+export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) => {
   const { user } = useContext(AuthContext);
   const { selectedChat, messages, sendMessage, isTyping } = useContext(ChatContext);
   const [messageText, setMessageText] = useState("");
@@ -65,9 +65,17 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo }) => {
             title="Convert to Mail"
             className="p-2 text-[#075E54] hover:bg-[#075E54]/5 rounded-full transition-all"
             onClick={() => {
+              const otherUser = selectedChat?.users?.find(u => u._id !== user._id);
+              const email = otherUser?.email || "";
               const transcript = messages.map(m => `${m.sender.name}: ${m.content}`).join('\n');
+              
               localStorage.setItem("dockchat_bridge_content", transcript);
-              alert("Conversation captured! Go to the MAIL tab and click Compose to see the transcript.");
+              localStorage.setItem("dockchat_bridge_to", email);
+              localStorage.setItem("dockchat_bridge_subject", `Chat Transcript with ${otherUser?.name || 'User'}`);
+              
+              if (onNavigateToMail) {
+                onNavigateToMail();
+              }
             }}
           >
             <Mail size={20} />

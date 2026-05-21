@@ -71,11 +71,29 @@ export const MailWidget = () => {
   }, [folder]);
 
   useEffect(() => {
+    const bridgeTo = localStorage.getItem("dockchat_bridge_to");
+    const bridgeContent = localStorage.getItem("dockchat_bridge_content");
+    if (bridgeTo || bridgeContent) {
+      setIsComposeOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (isComposeOpen) {
       const bridgeContent = localStorage.getItem("dockchat_bridge_content");
       if (bridgeContent) {
         setComposeBody(`--- Captured Chat Transcript ---\n\n${bridgeContent}\n\n-------------------------------`);
         localStorage.removeItem("dockchat_bridge_content");
+      }
+      const bridgeTo = localStorage.getItem("dockchat_bridge_to");
+      if (bridgeTo) {
+        setTo(bridgeTo);
+        localStorage.removeItem("dockchat_bridge_to");
+      }
+      const bridgeSubject = localStorage.getItem("dockchat_bridge_subject");
+      if (bridgeSubject) {
+        setSubject(bridgeSubject);
+        localStorage.removeItem("dockchat_bridge_subject");
       }
     }
   }, [isComposeOpen]);

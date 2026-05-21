@@ -7,7 +7,7 @@ import {
   Lock, ChevronRight, X
 } from "lucide-react";
 
-export const RightSidebar = ({ isMobile, onBack }) => {
+export const RightSidebar = ({ isMobile, onBack, onClose }) => {
   const { user } = useContext(AuthContext);
   const { selectedChat, messages } = useContext(ChatContext);
   
@@ -16,14 +16,18 @@ export const RightSidebar = ({ isMobile, onBack }) => {
   const docMessages = messages.filter(m => m.messageType === "file" || m.messageType === "audio").slice(0, 3);
   return (
     <aside className="flex flex-col h-full bg-white overflow-y-auto custom-scrollbar relative border-l border-slate-200">
-      {isMobile && (
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md z-20 flex items-center gap-4 px-6 py-4 border-b border-slate-100">
-          <button onClick={onBack} className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-full transition">
+      <div className="sticky top-0 bg-[#f0f2f5] z-20 flex items-center justify-between px-6 h-16 border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={onClose || onBack} 
+            className="p-2 -ml-2 text-slate-600 hover:bg-slate-200 rounded-full transition"
+            title="Close Contact Info"
+          >
             <X size={20} />
           </button>
-          <h2 className="text-lg font-bold text-slate-900">Contact Info</h2>
+          <h2 className="text-md font-bold text-slate-800">Contact Info</h2>
         </div>
-      )}
+      </div>
       
       {/* Contact Profile Detail */}
       <div className="p-8 flex flex-col items-center border-b border-slate-50">
