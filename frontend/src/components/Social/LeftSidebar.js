@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   BadgeCheck, MessageCircle, MoreVertical, 
   Search, Filter, CheckCheck, Star, Trash2, Archive,
-  Mail, Send, AlertCircle, Home, Users, FileText, Settings
+  Mail, Send, AlertCircle
 } from "lucide-react";
 
 export const LeftSidebar = ({ activeTab, onSelectChat }) => {
@@ -191,13 +191,6 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
         )}
       </div>
 
-      {/* Bottom Actions */}
-      <div className="flex-shrink-0 flex p-3 bg-slate-50 items-center justify-around text-slate-400 border-t border-slate-100">
-        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><Home size={20} /></button>
-        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><Users size={20} /></button>
-        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><FileText size={20} /></button>
-        <button className="p-2.5 hover:text-[#075E54] hover:bg-[#075E54]/5 rounded-xl transition-all"><Settings size={20} /></button>
-      </div>
     </div>
   );
 };
