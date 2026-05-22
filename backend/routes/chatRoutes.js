@@ -6,7 +6,9 @@ const {
   createGroupChat, 
   addToGroup, 
   removeFromGroup,
-  syncContacts
+  syncContacts,
+  clearChat,
+  deleteChat
 } = require("../controllers/chatController");
 
 const router = express.Router();
@@ -17,5 +19,7 @@ router.route("/sync").post(protect, syncContacts);
 router.route("/group").post(protect, createGroupChat);
 router.route("/groupadd").put(protect, addToGroup);
 router.route("/groupremove").put(protect, removeFromGroup);
+router.route("/:chatId/clear").delete(protect, clearChat);
+router.route("/:chatId").delete(protect, deleteChat);
 
 module.exports = router;

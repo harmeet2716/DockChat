@@ -11,7 +11,7 @@ import EmojiPicker from "emoji-picker-react";
 
 export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) => {
   const { user } = useContext(AuthContext);
-  const { selectedChat, messages, sendMessage, isTyping } = useContext(ChatContext);
+  const { selectedChat, messages, sendMessage, isTyping, clearChat, deleteChat } = useContext(ChatContext);
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -19,6 +19,119 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
   const [downloadingFiles, setDownloadingFiles] = useState({});
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef(null);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    };
+  }, []);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        
+        // Stop all tracks on the stream to release the mic
+        stream.getTracks().forEach(track => track.stop());
+
+        // Only upload and send if we didn't cancel
+        if (audioChunksRef.current.length > 0) {
+          await sendVoiceMessage(audioBlob);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      alert("Could not access microphone. Please ensure microphone permissions are granted.");
+    }
+  };
+
+  const sendVoiceMessage = async (blob) => {
+    setIsUploading(true);
+    try {
+      const file = new File([blob], "voice_message.webm", { type: "audio/webm" });
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
+      const res = await fetch(`${backendUrl}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload voice message");
+      }
+
+      const data = await res.json();
+      
+      // Format the duration nicely
+      const mins = Math.floor(recordingTime / 60);
+      const secs = recordingTime % 60;
+      const durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      
+      await sendMessage(`Voice message (${durationStr})`, "audio", data.url);
+    } catch (err) {
+      console.error("Error uploading voice message:", err);
+      alert("Error sending voice message. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      // Clear the chunks so onstop doesn't upload
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -33,6 +146,20 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showEmojiPicker]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMoreMenu]);
 
   const handleEmojiClick = (emojiData) => {
     setMessageText(prev => prev + emojiData.emoji);
@@ -161,46 +288,97 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
               <ChevronLeft size={24} />
             </button>
           )}
-          <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-600 border border-slate-200 shrink-0">
-            {getChatProfile(selectedChat)}
-          </div>
-          <div className="min-w-0" onClick={isMobile ? onShowInfo : undefined}>
-            <h3 className="text-sm font-bold text-slate-900 truncate">{getChatName(selectedChat)}</h3>
-            <p className="text-[10px] text-slate-500 font-medium">
-              {isTyping ? "typing..." : "online"}
-            </p>
-          </div>
+          {selectedChat && (
+            <>
+              <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-600 border border-slate-200 shrink-0">
+                {getChatProfile(selectedChat)}
+              </div>
+              <div className="min-w-0" onClick={isMobile ? onShowInfo : undefined}>
+                <h3 className="text-sm font-bold text-slate-900 truncate">{getChatName(selectedChat)}</h3>
+                <p className="text-[10px] text-slate-500 font-medium">
+                  {isTyping ? "typing..." : "online"}
+                </p>
+              </div>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-1">
-          <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Video size={20} /></button>
-          <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Phone size={18} /></button>
-          <button onClick={onShowInfo} className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Info size={20} /></button>
-          <div className="w-px h-6 bg-slate-200 mx-1" />
-          <button 
-            title="Convert to Mail"
-            className="p-2 text-[#075E54] hover:bg-[#075E54]/5 rounded-full transition-all"
-            onClick={() => {
-              const otherUser = selectedChat?.users?.find(u => u._id !== user._id);
-              const email = otherUser?.email || "";
-              const transcript = messages
-                .map(m => {
-                  const senderName = m.sender?.name || (m.sender === user._id ? user.name : "User");
-                  return `${senderName}: ${m.content || ""}`;
-                })
-                .join('\n');
-              
-              localStorage.setItem("dockchat_bridge_content", transcript);
-              localStorage.setItem("dockchat_bridge_to", email);
-              localStorage.setItem("dockchat_bridge_subject", `Chat Transcript with ${otherUser?.name || 'User'}`);
-              
-              if (onNavigateToMail) {
-                onNavigateToMail();
-              }
-            }}
-          >
-            <Mail size={20} />
-          </button>
-        </div>
+        {selectedChat && (
+          <div className="flex items-center gap-1">
+            <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Video size={20} /></button>
+            <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Phone size={18} /></button>
+            <button onClick={onShowInfo} className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><Info size={20} /></button>
+            <div className="w-px h-6 bg-slate-200 mx-1" />
+            <button 
+              title="Convert to Mail"
+              className="p-2 text-[#075E54] hover:bg-[#075E54]/5 rounded-full transition-all"
+              onClick={() => {
+                const otherUser = selectedChat?.users?.find(u => u._id !== user._id);
+                const email = otherUser?.email || "";
+                const transcript = messages
+                  .map(m => {
+                    const senderName = m.sender?.name || (m.sender === user._id ? user.name : "User");
+                    return `${senderName}: ${m.content || ""}`;
+                  })
+                  .join('\n');
+                
+                localStorage.setItem("dockchat_bridge_content", transcript);
+                localStorage.setItem("dockchat_bridge_to", email);
+                localStorage.setItem("dockchat_bridge_subject", `Chat Transcript with ${otherUser?.name || 'User'}`);
+                
+                if (onNavigateToMail) {
+                  onNavigateToMail();
+                }
+              }}
+            >
+              <Mail size={20} />
+            </button>
+            
+            {/* Clear/Delete Chat Action Menu */}
+            <div className="relative" ref={moreMenuRef}>
+              <button 
+                onClick={() => setShowMoreMenu(prev => !prev)}
+                className={`p-2 rounded-full transition ${showMoreMenu ? "text-slate-800 bg-slate-200" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}
+                title="More options"
+              >
+                <MoreVertical size={20} />
+              </button>
+              <AnimatePresence>
+                {showMoreMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50 overflow-hidden"
+                  >
+                    <button
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        if (window.confirm("Are you sure you want to clear all messages in this chat? This cannot be undone.")) {
+                          clearChat(selectedChat._id);
+                        }
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition flex items-center gap-2"
+                    >
+                      Clear Chat
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        if (window.confirm("Are you sure you want to delete this chat room entirely? This will remove the chat and all its messages permanently.")) {
+                          deleteChat(selectedChat._id);
+                        }
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition flex items-center gap-2"
+                    >
+                      Delete Chat
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Message Area */}
@@ -336,56 +514,98 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
       )}
 
       {/* Bottom Input Bar */}
-      <footer className="flex-shrink-0 bg-[#f0f2f5] p-3 flex items-center gap-2 z-10 border-t border-slate-200">
-        <div className="flex items-center gap-1">
-          <button 
-            type="button" 
-            onClick={() => setShowEmojiPicker(prev => !prev)}
-            className={`p-2 rounded-full transition ${showEmojiPicker ? "text-[#075E54] bg-slate-200" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}
-          >
-            <Smile size={24} />
-          </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            style={{ display: "none" }} 
-          />
-          <button 
-            type="button" 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition disabled:opacity-50"
-          >
-            {isUploading ? <Loader2 className="animate-spin text-[#075E54]" size={24} /> : <Paperclip size={24} />}
-          </button>
-        </div>
-        <form 
-          className="flex-1 min-w-0 flex gap-2 items-center"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (messageText.trim()) {
-              sendMessage(messageText);
-              setMessageText("");
-            }
-          }}
-        >
-          <input 
-            type="text" 
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            placeholder="Type a message"
-            className="flex-1 min-w-0 px-4 py-2 text-sm bg-white text-slate-800 rounded-full focus:outline-none placeholder:text-slate-400 shadow-sm"
-          />
-          <button 
-            type="submit"
-            disabled={!messageText.trim()}
-            className="w-10 h-10 bg-[#075E54] text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
-          >
-            {messageText.trim() ? <Send size={20} className="ml-0.5" /> : <Mic size={20} />}
-          </button>
-        </form>
-      </footer>
+      {selectedChat && (
+        <footer className="flex-shrink-0 bg-[#f0f2f5] p-3 flex items-center gap-2 z-10 border-t border-slate-200">
+          {isRecording ? (
+            <div className="flex-1 flex items-center justify-between bg-white rounded-full px-4 py-2 shadow-sm border border-slate-200/50">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-sm font-semibold text-slate-700">
+                  Recording... {Math.floor(recordingTime / 60)}:{((recordingTime % 60)).toString().padStart(2, '0')}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={cancelRecording}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-750 hover:bg-slate-105 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="px-4 py-1.5 text-xs font-bold bg-[#075E54] text-white rounded-full hover:scale-105 transition"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-1">
+                <button 
+                  type="button" 
+                  onClick={() => setShowEmojiPicker(prev => !prev)}
+                  className={`p-2 rounded-full transition ${showEmojiPicker ? "text-[#075E54] bg-slate-200" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}
+                >
+                  <Smile size={24} />
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  style={{ display: "none" }} 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition disabled:opacity-50"
+                >
+                  {isUploading ? <Loader2 className="animate-spin text-[#075E54]" size={24} /> : <Paperclip size={24} />}
+                </button>
+              </div>
+              <form 
+                className="flex-1 min-w-0 flex gap-2 items-center"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (messageText.trim()) {
+                    sendMessage(messageText);
+                    setMessageText("");
+                  }
+                }}
+              >
+                <input 
+                  type="text" 
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="Type a message"
+                  className="flex-1 min-w-0 px-4 py-2 text-sm bg-white text-slate-800 rounded-full focus:outline-none placeholder:text-slate-400 shadow-sm"
+                />
+                {messageText.trim() ? (
+                  <button 
+                    type="submit"
+                    className="w-10 h-10 bg-[#075E54] text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md"
+                  >
+                    <Send size={20} className="ml-0.5" />
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={startRecording}
+                    disabled={isUploading}
+                    className="w-10 h-10 bg-[#075E54] text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
+                    title="Record voice message"
+                  >
+                    <Mic size={20} />
+                  </button>
+                )}
+              </form>
+            </>
+          )}
+        </footer>
+      )}
     </div>
   );
 };

@@ -259,6 +259,49 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const clearChat = async (chatId) => {
+    if (!user || !chatId) return;
+    try {
+      const res = await fetch(`${ENDPOINT}/api/chat/${chatId}/clear`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        if (selectedChat && selectedChat._id === chatId) {
+          setMessages([]);
+        }
+        fetchChats();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error clearing chat:", error);
+      return false;
+    }
+  };
+
+  const deleteChat = async (chatId) => {
+    if (!user || !chatId) return;
+    try {
+      const res = await fetch(`${ENDPOINT}/api/chat/${chatId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        if (selectedChat && selectedChat._id === chatId) {
+          setSelectedChat(null);
+          setMessages([]);
+        }
+        fetchChats();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      return false;
+    }
+  };
+
   return (
     <ChatContext.Provider
       value={{
@@ -277,6 +320,8 @@ export const ChatProvider = ({ children }) => {
         socket,
         socketConnected,
         isTyping,
+        clearChat,
+        deleteChat,
       }}
     >
       {children}

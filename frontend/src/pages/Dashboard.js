@@ -359,7 +359,7 @@ export default function Dashboard() {
       </main>
 
       {/* Mobile-First Navigation */}
-      {isMobile && (
+      {isMobile && (activeTab !== "chats" || currentView !== "chat") && (
         <div className="mobile-nav">
           <button 
             onClick={() => setActiveTab("chats")}

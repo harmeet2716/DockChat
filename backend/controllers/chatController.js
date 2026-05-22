@@ -173,11 +173,45 @@ const syncContacts = async (req, res) => {
   }
 };
 
+const clearChat = async (req, res) => {
+  const { chatId } = req.params;
+
+  try {
+    // Delete all messages in this chat room
+    await Message.deleteMany({ chat: chatId });
+
+    // Reset latestMessage field of the Chat room
+    await Chat.findByIdAndUpdate(chatId, { latestMessage: null });
+
+    res.status(200).json({ message: "Chat cleared successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const deleteChat = async (req, res) => {
+  const { chatId } = req.params;
+
+  try {
+    // Delete the chat room
+    await Chat.findByIdAndDelete(chatId);
+
+    // Delete all messages associated with this chat
+    await Message.deleteMany({ chat: chatId });
+
+    res.status(200).json({ message: "Chat deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = { 
   accessChat, 
   fetchChats, 
   createGroupChat, 
   addToGroup, 
   removeFromGroup,
-  syncContacts 
+  syncContacts,
+  clearChat,
+  deleteChat
 };
