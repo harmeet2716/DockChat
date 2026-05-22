@@ -39,7 +39,15 @@ if (!fs.existsSync(uploadDir)) {
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || origin.startsWith("http://localhost") || origin.endsWith(".vercel.app")) {
+    if (
+      !origin || 
+      origin.startsWith("http://localhost") || 
+      origin.startsWith("http://127.0.0.1") ||
+      origin.startsWith("http://192.168.") ||
+      origin.startsWith("http://10.") ||
+      origin.startsWith("http://172.") ||
+      origin.endsWith(".vercel.app")
+    ) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));

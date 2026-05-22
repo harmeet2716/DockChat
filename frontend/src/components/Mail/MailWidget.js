@@ -30,7 +30,56 @@ export const MailWidget = () => {
 
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [downloadingFiles, setDownloadingFiles] = useState({});
   const mailFileInputRef = useRef(null);
+
+  const getAttachmentUrl = (url) => {
+    if (!url) return "";
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+    
+    if (url.startsWith("/")) {
+      return `${backendUrl}${url}`;
+    }
+    
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1") {
+        const backendParsed = new URL(backendUrl);
+        parsedUrl.protocol = backendParsed.protocol;
+        parsedUrl.host = backendParsed.host;
+        return parsedUrl.toString();
+      }
+    } catch (e) {
+      // Not a valid URL, return as is
+    }
+    return url;
+  };
+
+  const handleDownload = async (fileUrl, fileName) => {
+    const resolvedUrl = getAttachmentUrl(fileUrl);
+    setDownloadingFiles(prev => ({ ...prev, [fileUrl]: true }));
+    try {
+      const res = await fetch(resolvedUrl, {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error("Failed to download file");
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Error during download:", err);
+      // Fallback if CORS or fetch fails
+      window.open(resolvedUrl, "_blank");
+    } finally {
+      setDownloadingFiles(prev => ({ ...prev, [fileUrl]: false }));
+    }
+  };
 
   const handleMailFileChange = async (e) => {
     const file = e.target.files[0];
@@ -79,7 +128,7 @@ export const MailWidget = () => {
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          recipients: { to: [to] },
+          recipients: { to: [to.trim().toLowerCase()] },
           subject,
           content: composeBody,
           attachments,
@@ -301,21 +350,23 @@ export const MailWidget = () => {
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button
-                            onClick={() => window.open(file.url, '_blank')}
+                            onClick={() => window.open(getAttachmentUrl(file.url), '_blank')}
                             className="px-3 py-1.5 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
                           >
                             View
                           </button>
-                          <a
-                            href={file.url}
-                            download={file.name}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition flex items-center justify-center"
+                          <button
+                            onClick={() => handleDownload(file.url, file.name)}
+                            disabled={!!downloadingFiles[file.url]}
+                            className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition flex items-center justify-center disabled:opacity-50"
                             title="Download Attachment"
                           >
-                            <Download size={15} />
-                          </a>
+                            {downloadingFiles[file.url] ? (
+                              <Loader2 className="animate-spin text-[#ea4335]" size={15} />
+                            ) : (
+                              <Download size={15} />
+                            )}
+                          </button>
                         </div>
                       </div>
                     ))}

@@ -16,6 +16,24 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  const getAttachmentUrl = (url) => {
+    if (!url) return "";
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+    if (url.startsWith("/")) {
+      return `${backendUrl}${url}`;
+    }
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1") {
+        const backendParsed = new URL(backendUrl);
+        parsedUrl.protocol = backendParsed.protocol;
+        parsedUrl.host = backendParsed.host;
+        return parsedUrl.toString();
+      }
+    } catch (e) {}
+    return url;
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -182,23 +200,23 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
                   {msg.messageType === "image" && msg.mediaUrl ? (
                     <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 shadow-sm bg-slate-50">
                       <img 
-                        src={msg.mediaUrl} 
+                        src={getAttachmentUrl(msg.mediaUrl)} 
                         alt={msg.content} 
                         className="w-full h-auto object-cover max-h-60 cursor-zoom-in hover:opacity-95 transition" 
-                        onClick={() => window.open(msg.mediaUrl, '_blank')} 
+                        onClick={() => window.open(getAttachmentUrl(msg.mediaUrl), '_blank')} 
                       />
                     </div>
                   ) : msg.messageType === "video" && msg.mediaUrl ? (
                     <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 bg-slate-900 shadow-sm">
-                      <video src={msg.mediaUrl} controls className="w-full max-h-60" />
+                      <video src={getAttachmentUrl(msg.mediaUrl)} controls className="w-full max-h-60" />
                     </div>
                   ) : msg.messageType === "audio" && msg.mediaUrl ? (
                     <div className="mb-1 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 p-2 shadow-sm flex items-center gap-2 max-w-xs">
-                      <audio src={msg.mediaUrl} controls className="w-full scale-90" />
+                      <audio src={getAttachmentUrl(msg.mediaUrl)} controls className="w-full scale-90" />
                     </div>
                   ) : msg.messageType === "file" && msg.mediaUrl ? (
                     <a 
-                      href={msg.mediaUrl} 
+                      href={getAttachmentUrl(msg.mediaUrl)} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="mb-1 flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/60 transition max-w-xs text-slate-800 decoration-none no-underline block"

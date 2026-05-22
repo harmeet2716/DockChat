@@ -33,12 +33,132 @@ const useWindowSize = () => {
 
 export default function Dashboard() {
   const { user, logout } = useContext(AuthContext);
-  const { selectedChat, setSelectedChat, syncContacts } = useContext(ChatContext);
+  const { selectedChat, setSelectedChat, syncContacts, socket } = useContext(ChatContext);
   const { width } = useWindowSize();
   const isMobile = width < 768;
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(!isMobile);
 
   const [activeTab, setActiveTab] = useState("chats"); // chats or mail
+  const [activeNotification, setActiveNotification] = useState(null);
+
+  // Play a premium organic notification sound using Web Audio API (sine waves)
+  const playNotificationChime = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const playPing = (time, pitch) => {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(pitch, time);
+        
+        gainNode.gain.setValueAtTime(0, time);
+        gainNode.gain.linearRampToValueAtTime(0.12, time + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.35);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc.start(time);
+        osc.stop(time + 0.35);
+      };
+      
+      const now = audioCtx.currentTime;
+      playPing(now, 523.25); // C5 tone
+      playPing(now + 0.12, 659.25); // E5 tone
+    } catch (e) {
+      console.error("Failed to play notification chime via Web Audio:", e);
+    }
+  };
+
+  // Helper to trigger both HTML5 Desktop Notification and In-App Toast Alert
+  const triggerNotification = (payload) => {
+    playNotificationChime();
+
+    // Browser native desktop notification if window is minimized/backgrounded
+    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification(payload.title, {
+          body: payload.body,
+          icon: payload.icon || "/default-avatar.png",
+        });
+      } catch (err) {
+        console.error("Native notification failed:", err);
+      }
+    }
+
+    setActiveNotification(payload);
+  };
+
+  // Toast clicked action: auto-activate correct folder/tab and switch views
+  const handleNotificationClick = () => {
+    if (!activeNotification) return;
+
+    if (activeNotification.type === "chat") {
+      setActiveTab("chats");
+      setSelectedChat(activeNotification.data.chat || activeNotification.data);
+    } else if (activeNotification.type === "mail") {
+      setActiveTab("mail");
+    }
+    setActiveNotification(null);
+  };
+
+  // Auto-dismiss toast notification after 5 seconds
+  useEffect(() => {
+    if (activeNotification) {
+      const timer = setTimeout(() => {
+        setActiveNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeNotification]);
+
+  // Request browser desktop notification permissions on load
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Listen to Socket.io events for real-time messages and emails
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessageReceived = (msg) => {
+      const isCurrentChat = selectedChat && selectedChat._id === msg.chat._id;
+      
+      // Trigger notification if not in this chat room right now, or app is hidden
+      if (!isCurrentChat || activeTab !== "chats" || document.hidden) {
+        triggerNotification({
+          title: `Message from ${msg.sender.name}`,
+          body: msg.messageType === "text" ? msg.content : `[Shared ${msg.messageType}]`,
+          icon: msg.sender.profilePic,
+          type: "chat",
+          data: msg
+        });
+      }
+    };
+
+    const handleMailReceived = (mail) => {
+      // Always trigger notification for new emails in real-time
+      triggerNotification({
+        title: `Email: ${mail.subject}`,
+        body: `From: ${mail.sender.name}\n${mail.content.substring(0, 60)}...`,
+        icon: mail.sender.profilePic,
+        type: "mail",
+        data: mail
+      });
+    };
+
+    socket.on("message recieved", handleMessageReceived);
+    socket.on("mail recieved", handleMailReceived);
+
+    return () => {
+      socket.off("message recieved", handleMessageReceived);
+      socket.off("mail recieved", handleMailReceived);
+    };
+  }, [socket, selectedChat, activeTab]);
   const [currentView, setCurrentView] = useState("list"); // list, chat, profile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(!user?.isContactsSynced);
@@ -229,6 +349,41 @@ export default function Dashboard() {
           </Link>
         </div>
       )}
+
+      <AnimatePresence>
+        {activeNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            onClick={handleNotificationClick}
+            className="fixed top-6 right-6 z-[99999] w-[360px] bg-white/90 backdrop-blur-md border border-slate-200/50 rounded-2xl p-4 shadow-2xl flex gap-3.5 cursor-pointer hover:bg-white transition-all duration-300 group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/50 overflow-hidden flex-shrink-0 flex items-center justify-center">
+              {activeNotification.icon ? (
+                <img src={activeNotification.icon} alt="Sender" className="w-full h-full object-cover" />
+              ) : (
+                <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${activeNotification.type === 'chat' ? 'bg-[#075E54]' : 'bg-[#ea4335]'}`}>
+                  {activeNotification.title ? activeNotification.title[0] : 'N'}
+                </div>
+              )}
+            </div>
+            <div className="flex-grow min-w-0">
+              <h4 className="text-xs font-bold text-slate-800 truncate leading-tight group-hover:text-[#ea4335] transition-colors">{activeNotification.title}</h4>
+              <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-normal font-medium">{activeNotification.body}</p>
+            </div>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveNotification(null);
+              }}
+              className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded-full transition"
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ContactSyncModal 
         isOpen={isSyncModalOpen} 

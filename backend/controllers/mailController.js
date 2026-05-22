@@ -9,10 +9,25 @@ const sendMail = async (req, res) => {
     return res.status(400).json({ message: "Please provide all required fields" });
   }
 
+  // Normalize recipient emails (trim & lowercase)
+  const normalizedTo = Array.isArray(recipients.to)
+    ? recipients.to.map(email => email.trim().toLowerCase())
+    : [];
+  const normalizedCc = Array.isArray(recipients.cc)
+    ? recipients.cc.map(email => email.trim().toLowerCase())
+    : [];
+  const normalizedBcc = Array.isArray(recipients.bcc)
+    ? recipients.bcc.map(email => email.trim().toLowerCase())
+    : [];
+
   try {
     const newMail = await Mail.create({
       sender: req.user._id,
-      recipients,
+      recipients: {
+        to: normalizedTo,
+        cc: normalizedCc,
+        bcc: normalizedBcc,
+      },
       subject,
       content,
       threadId: threadId || uuidv4(),
@@ -24,6 +39,15 @@ const sendMail = async (req, res) => {
     // For now, we simplify: just mark it in their system
     // In a real multi-user system, we might duplicate the record or use references
     const populatedMail = await newMail.populate("sender", "name email profilePic");
+
+    // Fetch recipient user IDs to emit socket events in real-time
+    const recipientUsers = await User.find({ email: { $in: normalizedTo } }).select("_id");
+    const io = req.app.get("io");
+    if (io) {
+      recipientUsers.forEach(recUser => {
+        io.to(recUser._id.toString()).emit("mail recieved", populatedMail);
+      });
+    }
 
     res.status(201).json(populatedMail);
   } catch (error) {
