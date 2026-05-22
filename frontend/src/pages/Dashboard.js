@@ -283,7 +283,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main className="flex-1 flex overflow-hidden relative pb-[70px] md:pb-0">
         {/* Column 1: List (Chats) - Hidden on mobile if viewing chat/profile */}
         {(!isMobile || currentView === "list") && activeTab === "chats" && (
           <div className={`${isMobile ? "w-full" : "w-[400px] border-r border-white/5"} bg-[var(--bg-secondary)] flex flex-col z-10 transition-all`}>
