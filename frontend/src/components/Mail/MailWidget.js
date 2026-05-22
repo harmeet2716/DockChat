@@ -1,11 +1,11 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Inbox, Send, Star, Trash2, Edit3, 
-  Search, Paperclip, MoreVertical, Star as StarIcon,
-  Reply, Forward, Trash, ChevronRight, User, Loader2,
-  Mail, X
+  Search, Paperclip, Star as StarIcon,
+  Reply, Forward, ChevronRight, Loader2,
+  Mail, X, Download
 } from "lucide-react";
 
 export const MailWidget = () => {
@@ -28,6 +28,45 @@ export const MailWidget = () => {
     return localStorage.getItem("dockchat_bridge_subject") || "";
   });
 
+  const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const mailFileInputRef = useRef(null);
+
+  const handleMailFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+      const res = await fetch(`${backendUrl}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload attachment");
+      }
+
+      const data = await res.json();
+      setAttachments(prev => [...prev, { name: file.name, url: data.url }]);
+    } catch (err) {
+      console.error("Error uploading attachment:", err);
+      alert("Error uploading attachment. Please try again.");
+    } finally {
+      setIsUploading(false);
+      if (mailFileInputRef.current) {
+        mailFileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleSendMail = async () => {
     if (!to || !subject || !composeBody) return;
     setLoading(true);
@@ -43,6 +82,7 @@ export const MailWidget = () => {
           recipients: { to: [to] },
           subject,
           content: composeBody,
+          attachments,
         }),
       });
       if (res.ok) {
@@ -50,6 +90,7 @@ export const MailWidget = () => {
         setComposeBody("");
         setTo("");
         setSubject("");
+        setAttachments([]);
         fetchMails();
       }
     } catch (error) {
@@ -84,6 +125,7 @@ export const MailWidget = () => {
       setComposeBody("");
       setTo("");
       setSubject("");
+      setAttachments([]);
       localStorage.removeItem("dockchat_bridge_content");
       localStorage.removeItem("dockchat_bridge_to");
       localStorage.removeItem("dockchat_bridge_subject");
@@ -236,6 +278,50 @@ export const MailWidget = () => {
               <div className="text-slate-700 leading-relaxed whitespace-pre-wrap font-normal text-sm bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                 {selectedMail.content}
               </div>
+
+              {/* Attachments Section */}
+              {selectedMail.attachments && selectedMail.attachments.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-slate-100">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Attachments</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedMail.attachments.map((file, idx) => (
+                      <div 
+                        key={idx}
+                        className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200/60 transition shadow-sm"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-lg bg-[#ea4335]/10 text-[#ea4335] flex items-center justify-center shrink-0">
+                            <Paperclip size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate pr-2" title={file.name}>
+                              {file.name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => window.open(file.url, '_blank')}
+                            className="px-3 py-1.5 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                          >
+                            View
+                          </button>
+                          <a
+                            href={file.url}
+                            download={file.name}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition flex items-center justify-center"
+                            title="Download Attachment"
+                          >
+                            <Download size={15} />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <footer className="p-8 border-t border-slate-100 flex gap-4 bg-slate-50/50">
@@ -282,7 +368,7 @@ export const MailWidget = () => {
                 </div>
                 <button onClick={() => setIsComposeOpen(false)} className="p-3 hover:bg-white/10 rounded-full transition"><X /></button>
               </div>
-              <div className="p-10 space-y-8">
+              <div className="p-10 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-[#075E54] ml-1">To</label>
@@ -310,13 +396,56 @@ export const MailWidget = () => {
                   <textarea 
                     value={composeBody}
                     onChange={(e) => setComposeBody(e.target.value)}
-                    className="w-full h-64 bg-slate-50 border-none rounded-3xl py-6 px-6 text-sm font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition resize-none leading-relaxed" 
+                    className="w-full h-48 bg-slate-50 border-none rounded-3xl py-6 px-6 text-sm font-semibold focus:ring-4 focus:ring-[#25D366]/10 transition resize-none leading-relaxed" 
                     placeholder="Type your professional message..." 
                   />
                 </div>
+
+                {/* Pre-sent Attachment Badges */}
+                {attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-[#075E54] ml-1">Attachments</label>
+                    <div className="flex flex-wrap gap-2.5 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      {attachments.map((file, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex items-center gap-2 bg-white border border-slate-200/60 py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-700 shadow-sm animate-fade-in"
+                        >
+                          <Paperclip size={14} className="text-[#075E54]" />
+                          <span className="truncate max-w-[180px]">{file.name}</span>
+                          <button 
+                            type="button"
+                            onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))}
+                            className="text-slate-400 hover:text-rose-500 transition-all p-0.5 rounded-full hover:bg-slate-100 ml-1 flex items-center justify-center shrink-0"
+                            title="Remove attachment"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between pt-4">
-                  <button className="flex items-center gap-2 text-slate-400 hover:text-[#075E54] font-bold text-sm transition">
-                    <Paperclip size={20} /> Add Attachment
+                  <input 
+                    type="file"
+                    ref={mailFileInputRef}
+                    onChange={handleMailFileChange}
+                    style={{ display: "none" }}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => mailFileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="flex items-center gap-2 text-slate-400 hover:text-[#075E54] font-bold text-sm transition disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="animate-spin text-[#075E54]" size={20} />
+                    ) : (
+                      <Paperclip size={20} />
+                    )}
+                    <span>{isUploading ? "Uploading..." : "Add Attachment"}</span>
                   </button>
                   <button 
                     onClick={handleSendMail}
