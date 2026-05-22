@@ -172,10 +172,7 @@ button, a, input, select {
   scrollbar-width: none;
 }
 
-/* Mobile-First Navigation (Mobile App feel) */
-.mobile-nav {
-  @apply fixed bottom-0 left-0 right-0 h-[var(--nav-height)] bg-black/80 backdrop-blur-xl border-t border-white/5 flex items-center justify-around z-[100] sm:hidden;
-}
+
 
 /* Responsive Grid/Flex Utilities */
 .fluid-container {

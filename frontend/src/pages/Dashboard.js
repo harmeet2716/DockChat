@@ -283,7 +283,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden relative pb-[70px] md:pb-0">
+      <main className="flex-1 flex overflow-hidden relative">
         {/* Column 1: List (Chats) - Hidden on mobile if viewing chat/profile */}
         {(!isMobile || currentView === "list") && activeTab === "chats" && (
           <div className={`${isMobile ? "w-full" : "w-[400px] border-r border-white/5"} bg-[var(--bg-secondary)] flex flex-col z-10 transition-all`}>
@@ -358,32 +358,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Mobile-First Navigation */}
-      {isMobile && (activeTab !== "chats" || currentView !== "chat") && (
-        <div className="mobile-nav">
-          <button 
-            onClick={() => setActiveTab("chats")}
-            className={`flex flex-col items-center gap-1 transition-all ${activeTab === "chats" ? "text-[var(--chat-accent)] scale-110" : "text-white/40"}`}
-          >
-            <MessageSquare size={20} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Chat</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab("mail")}
-            className={`flex flex-col items-center gap-1 transition-all ${activeTab === "mail" ? "text-[var(--mail-accent)] scale-110" : "text-white/40"}`}
-          >
-            <Mail size={20} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Mail</span>
-          </button>
-          <Link 
-            to="/settings"
-            className="flex flex-col items-center gap-1 text-white/40"
-          >
-            <Settings size={20} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Intel</span>
-          </Link>
-        </div>
-      )}
+
 
       {/* Responsive Mobile Menu Drawer */}
       <AnimatePresence>
