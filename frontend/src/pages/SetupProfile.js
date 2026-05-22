@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, User, Info, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AvatarCropModal from "../components/AvatarCropModal";
 
 export function SetupProfile() {
   const { user, updateProfile } = useContext(AuthContext);
@@ -13,13 +14,30 @@ export function SetupProfile() {
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
-  const handleImageUpload = async (e) => {
+  const [srcImage, setSrcImage] = useState(null);
+  const [originalFile, setOriginalFile] = useState(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
+
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSrcImage(reader.result);
+      setOriginalFile(file);
+      setIsCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveCrop = async (blob) => {
     setUploading(true);
+    setIsCropOpen(false);
+
+    const croppedFile = new File([blob], originalFile.name || "profile.jpg", { type: "image/jpeg" });
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", croppedFile);
 
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
@@ -30,12 +48,18 @@ export function SetupProfile() {
         },
         body: formData,
       });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload file");
+      }
+
       const data = await res.json();
       if (data.url) {
         setProfilePic(data.url);
       }
     } catch (err) {
       console.error("Image upload failed:", err);
+      alert("Failed to upload adjusted profile picture. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -164,6 +188,17 @@ export function SetupProfile() {
           By clicking finish, your name and photo will become visible to other users on the platform.
         </p>
       </motion.div>
+
+      {/* Circle Crop Modal */}
+      <AnimatePresence>
+        {isCropOpen && srcImage && (
+          <AvatarCropModal
+            srcImage={srcImage}
+            onClose={() => setIsCropOpen(false)}
+            onSave={handleSaveCrop}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

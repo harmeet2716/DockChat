@@ -53,102 +53,135 @@ export default function Dashboard() {
         osc.type = "sine";
         osc.frequency.setValueAtTime(pitch, time);
         
-        gainNode.gain.setValueAtTime(0, time);
-        gainNode.gain.linearRampToValueAtTime(0.12, time + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.35);
+        gainNode.gain.setValueAtTime(0.12, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, time + 0.5);
         
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         
         osc.start(time);
-        osc.stop(time + 0.35);
+        osc.stop(time + 0.6);
+      };
+
+      const now = audioCtx.currentTime;
+      // Double ping signature sound
+      playPing(now, 880); // high note
+      playPing(now + 0.12, 1109); // premium interval note
+    } catch (err) {
+      console.warn("Audio Context block or unsupported:", err);
+    }
+  };
+
+  // Browser desktop notification orchestrator
+  const showDesktopNotification = (title, body, iconUrl, onClickAction) => {
+    if (!("Notification" in window)) return;
+    
+    if (Notification.permission === "granted") {
+      const options = {
+        body: body,
+        icon: iconUrl || "/favicon.ico",
+        silent: true, // We play our own high quality synthesized sound
       };
       
-      const now = audioCtx.currentTime;
-      playPing(now, 523.25); // C5 tone
-      playPing(now + 0.12, 659.25); // E5 tone
-    } catch (e) {
-      console.error("Failed to play notification chime via Web Audio:", e);
+      const notification = new Notification(title, options);
+      notification.onclick = () => {
+        window.focus();
+        onClickAction();
+        notification.close();
+      };
     }
   };
 
-  // Helper to trigger both HTML5 Desktop Notification and In-App Toast Alert
-  const triggerNotification = (payload) => {
-    playNotificationChime();
-
-    // Browser native desktop notification if window is minimized/backgrounded
-    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-      try {
-        new Notification(payload.title, {
-          body: payload.body,
-          icon: payload.icon || "/default-avatar.png",
-        });
-      } catch (err) {
-        console.error("Native notification failed:", err);
-      }
-    }
-
-    setActiveNotification(payload);
-  };
-
-  // Toast clicked action: auto-activate correct folder/tab and switch views
+  // Switch to correct view and open relevant sections when notification clicked
   const handleNotificationClick = () => {
     if (!activeNotification) return;
 
     if (activeNotification.type === "chat") {
       setActiveTab("chats");
-      setSelectedChat(activeNotification.data.chat || activeNotification.data);
+      setSelectedChat(activeNotification.data);
+      if (isMobile) setCurrentView("chat");
     } else if (activeNotification.type === "mail") {
       setActiveTab("mail");
     }
+    
     setActiveNotification(null);
   };
 
-  // Auto-dismiss toast notification after 5 seconds
-  useEffect(() => {
-    if (activeNotification) {
-      const timer = setTimeout(() => {
-        setActiveNotification(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [activeNotification]);
-
-  // Request browser desktop notification permissions on load
+  // Request desktop notification permission on mount
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
   }, []);
 
-  // Listen to Socket.io events for real-time messages and emails
+  // Listen for socket events to push notifications
   useEffect(() => {
     if (!socket) return;
 
     const handleMessageReceived = (msg) => {
-      const isCurrentChat = selectedChat && selectedChat._id === msg.chat._id;
-      
-      // Trigger notification if not in this chat room right now, or app is hidden
-      if (!isCurrentChat || activeTab !== "chats" || document.hidden) {
-        triggerNotification({
-          title: `Message from ${msg.sender.name}`,
-          body: msg.messageType === "text" ? msg.content : `[Shared ${msg.messageType}]`,
-          icon: msg.sender.profilePic,
-          type: "chat",
-          data: msg
-        });
+      // Don't notify if we are actively viewing this chat
+      if (selectedChat && selectedChat._id === msg.chat._id && activeTab === "chats") {
+        return;
+      }
+
+      playNotificationChime();
+
+      const senderName = msg.sender.name || msg.sender.username;
+      const title = `New Message from ${senderName}`;
+      const body = msg.content || "Sent an attachment";
+      const icon = msg.sender.profilePic;
+
+      const clickAction = () => {
+        setActiveTab("chats");
+        setSelectedChat(msg.chat);
+        if (isMobile) setCurrentView("chat");
+      };
+
+      // Toast Notification
+      setActiveNotification({
+        type: "chat",
+        title: title,
+        body: body,
+        icon: icon,
+        data: msg.chat
+      });
+
+      // Browser System Notification (only when minimized or tab is in background)
+      if (document.hidden) {
+        showDesktopNotification(title, body, icon, clickAction);
       }
     };
 
     const handleMailReceived = (mail) => {
-      // Always trigger notification for new emails in real-time
-      triggerNotification({
-        title: `Email: ${mail.subject}`,
-        body: `From: ${mail.sender.name}\n${mail.content.substring(0, 60)}...`,
-        icon: mail.sender.profilePic,
+      // Don't notify if we are actively viewing mailbox
+      if (activeTab === "mail") {
+        return;
+      }
+
+      playNotificationChime();
+
+      const senderName = mail.sender.name || mail.sender.username;
+      const title = `New Mail: ${mail.subject}`;
+      const body = `${senderName}: ${mail.body.substring(0, 100)}...`;
+      const icon = mail.sender.profilePic;
+
+      const clickAction = () => {
+        setActiveTab("mail");
+      };
+
+      // Toast Notification
+      setActiveNotification({
         type: "mail",
+        title: title,
+        body: body,
+        icon: icon,
         data: mail
       });
+
+      // Browser System Notification
+      if (document.hidden) {
+        showDesktopNotification(title, body, icon, clickAction);
+      }
     };
 
     socket.on("message recieved", handleMessageReceived);
@@ -159,6 +192,7 @@ export default function Dashboard() {
       socket.off("mail recieved", handleMailReceived);
     };
   }, [socket, selectedChat, activeTab]);
+
   const [currentView, setCurrentView] = useState("list"); // list, chat, profile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(!user?.isContactsSynced);
@@ -202,7 +236,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex h-11 items-center bg-white/10 rounded-full p-1 border border-white/20 shadow-inner">
+          {/* Hidden on mobile, shown on md and up */}
+          <div className="hidden md:flex h-11 items-center bg-white/10 rounded-full p-1 border border-white/20 shadow-inner">
             <button
               onClick={() => setActiveTab("chats")}
               className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
@@ -349,6 +384,165 @@ export default function Dashboard() {
           </Link>
         </div>
       )}
+
+      {/* Responsive Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobile && isMobileMenuOpen && (
+          <div className="fixed inset-0 z-[100] flex">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute inset-0 bg-[#0b141a]/60 backdrop-blur-sm"
+            />
+
+            {/* Sliding Drawer Content */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="relative w-80 max-w-[85vw] bg-white h-full flex flex-col shadow-2xl z-10"
+            >
+              {/* Drawer Header */}
+              <div className={`p-6 flex items-center justify-between text-white transition-all duration-500 ${
+                activeTab === "chats" ? "bg-[#075E54]" : "bg-[#ea4335]"
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center p-1 shadow-sm shrink-0">
+                    <span className={`font-black text-xs ${activeTab === "chats" ? "text-[#075E54]" : "text-[#ea4335]"}`}>DC</span>
+                  </div>
+                  <span className="text-lg font-bold tracking-tight">DockChat</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-all active:scale-95 text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Drawer Scrollable Body */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                {/* User Profile Card */}
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-4 relative group">
+                  <div className="w-14 h-14 rounded-full border-2 border-white shadow-md bg-white flex items-center justify-center text-xl font-bold text-[#075E54] overflow-hidden shrink-0">
+                    {user?.profilePic ? (
+                      <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      (user?.name?.[0] || user?.username?.[0] || "?").toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-bold text-slate-800 truncate">{user?.name || user?.username}</h4>
+                    <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5">{user?.about || "Active Now"}</p>
+                  </div>
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 bg-white hover:bg-slate-100 active:scale-95 text-slate-400 hover:text-slate-600 rounded-full shadow-sm border border-slate-100 transition-all shrink-0"
+                  >
+                    <Settings size={16} />
+                  </Link>
+                </div>
+
+                {/* Section Toggle list */}
+                <div className="space-y-3">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block px-1">Navigation</span>
+                  
+                  {/* IM Chats Toggle */}
+                  <button
+                    onClick={() => {
+                      setActiveTab("chats");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl font-semibold transition-all text-sm group ${
+                      activeTab === "chats"
+                        ? "bg-[#25D366]/10 text-[#075E54] border border-[#25D366]/20 shadow-sm"
+                        : "bg-white text-slate-600 hover:bg-slate-50 border border-transparent"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl transition-all ${
+                      activeTab === "chats" ? "bg-[#25D366] text-white" : "bg-slate-100 text-slate-400 group-hover:text-slate-600 group-hover:bg-slate-200"
+                    }`}>
+                      <MessageSquare size={18} />
+                    </div>
+                    <span className="flex-1 text-left">IM Chats</span>
+                    {activeTab === "chats" && <div className="w-2 h-2 rounded-full bg-[#25D366]" />}
+                  </button>
+
+                  {/* Inbox Mail Toggle */}
+                  <button
+                    onClick={() => {
+                      setActiveTab("mail");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl font-semibold transition-all text-sm group ${
+                      activeTab === "mail"
+                        ? "bg-[#ea4335]/10 text-[#ea4335] border border-[#ea4335]/20 shadow-sm"
+                        : "bg-white text-slate-600 hover:bg-slate-50 border border-transparent"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl transition-all ${
+                      activeTab === "mail" ? "bg-[#ea4335] text-white" : "bg-slate-100 text-slate-400 group-hover:text-slate-600 group-hover:bg-slate-200"
+                    }`}>
+                      <Mail size={18} />
+                    </div>
+                    <span className="flex-1 text-left">Inbox Mail</span>
+                    {activeTab === "mail" && <div className="w-2 h-2 rounded-full bg-[#ea4335]" />}
+                  </button>
+                </div>
+
+                {/* Account Settings / Help */}
+                <div className="space-y-3">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block px-1">Settings</span>
+
+                  <button
+                    onClick={() => {
+                      setIsSyncModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 text-sm font-semibold transition-all text-left"
+                  >
+                    <div className="p-2 bg-slate-100 text-slate-400 rounded-xl">
+                      <User size={18} />
+                    </div>
+                    <span>Sync Contacts</span>
+                  </button>
+
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 text-sm font-semibold transition-all block text-left"
+                  >
+                    <div className="p-2 bg-slate-100 text-slate-400 rounded-xl inline-block mr-4 align-middle">
+                      <Settings size={18} />
+                    </div>
+                    <span className="align-middle">Profile Settings</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Drawer Footer (Logout) */}
+              <div className="p-6 border-t border-slate-100">
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-3 p-4 bg-rose-50 text-rose-600 rounded-2xl font-bold hover:bg-rose-100 transition-all text-xs uppercase tracking-widest"
+                >
+                  <LogOut size={16} />
+                  <span>Logout Session</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {activeNotification && (

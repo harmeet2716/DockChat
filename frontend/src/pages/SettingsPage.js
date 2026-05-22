@@ -4,15 +4,21 @@ import { AuthContext } from '../context/AuthContext';
 import { 
   Bell, Shield, Moon, LogOut, ArrowLeft, 
   Camera, Check, Trash2, ChevronRight, Globe, HelpCircle,
-  Pencil, X, Save, User, Info, Phone, Lock
+  Pencil, X, Save, User, Info, Phone, Lock, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AvatarCropModal from '../components/AvatarCropModal';
 
 const SettingsPage = () => {
   const { user, logout, updateProfile } = useContext(AuthContext);
   const [editingField, setEditingField] = useState(null); // 'name' | 'about'
   const [tempValue, setTempValue] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [uploading, setUploading] = useState(false);
+  const [srcImage, setSrcImage] = useState(null);
+  const [originalFile, setOriginalFile] = useState(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
 
   const handleEditClick = (field, currentValue) => {
     setEditingField(field);
@@ -26,6 +32,53 @@ const SettingsPage = () => {
     setEditingField(null);
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSrcImage(reader.result);
+      setOriginalFile(file);
+      setIsCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveCrop = async (blob) => {
+    setUploading(true);
+    setIsCropOpen(false);
+
+    const croppedFile = new File([blob], originalFile.name || "profile.jpg", { type: "image/jpeg" });
+    const formData = new FormData();
+    formData.append("file", croppedFile);
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
+      const res = await fetch(`${backendUrl}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload file");
+      }
+
+      const data = await res.json();
+      if (data.url) {
+        await updateProfile({ profilePic: data.url });
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      alert("Failed to upload adjusted profile picture. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const menuItems = [
     { icon: <Bell size={20} />, title: "Notifications", desc: "Sound, badges & message alerts", color: "text-[#075E54]", bg: "bg-[#D1F4CC]/30" },
     { icon: <Shield size={20} />, title: "Privacy & Security", desc: "Two-step verification, blocked contacts", color: "text-[#075E54]", bg: "bg-[#D1F4CC]/30" },
@@ -35,11 +88,11 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] text-[#111b21] font-sans selection:bg-[#25D366]/30">
+    <div className="min-h-screen bg-[#f0f2f5] text-[#111b21] font-sans selection:bg-[#25D366]/30 animate-fade-in">
       {/* Header */}
-      <header className="bg-[#075E54] text-white p-6 pb-20 sticky top-0 z-20">
+      <header className="bg-[#075E54] text-white p-6 pb-20 sticky top-0 z-20 shadow-md">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <Link to="/dashboard" className="p-2 hover:bg-white/10 rounded-full transition">
+          <Link to="/dashboard" className="p-2 hover:bg-white/10 rounded-full transition active:scale-95">
             <ArrowLeft size={24} />
           </Link>
           <h1 className="text-xl font-bold">Profile</h1>
@@ -52,16 +105,22 @@ const SettingsPage = () => {
           {/* Large Profile Picture */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative group/avatar">
-              <div className="w-40 h-40 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center text-5xl font-bold text-[#075E54] overflow-hidden">
+              <div className="w-40 h-40 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center text-5xl font-bold text-[#075E54] overflow-hidden relative">
                 {user?.profilePic ? (
                   <img src={user.profilePic} alt="profile" className="w-full h-full object-cover" />
                 ) : (
                   (user?.name?.[0] || "?").toUpperCase()
                 )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white">
+                    <Loader2 size={24} className="animate-spin mb-1 text-white" />
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-white">Uploading...</span>
+                  </div>
+                )}
               </div>
-              <label className="absolute bottom-1 right-1 p-3 bg-[#25D366] text-white rounded-full shadow-lg cursor-pointer hover:scale-110 active:scale-95 transition-all">
+              <label className="absolute bottom-1 right-1 p-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full shadow-lg cursor-pointer hover:scale-110 active:scale-95 transition-all">
                 <Camera size={24} />
-                <input type="file" className="hidden" />
+                <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
               </label>
             </div>
           </div>
@@ -200,6 +259,17 @@ const SettingsPage = () => {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Circle Crop Modal */}
+      <AnimatePresence>
+        {isCropOpen && srcImage && (
+          <AvatarCropModal
+            srcImage={srcImage}
+            onClose={() => setIsCropOpen(false)}
+            onSave={handleSaveCrop}
+          />
         )}
       </AnimatePresence>
     </div>
