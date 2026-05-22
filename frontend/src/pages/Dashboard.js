@@ -298,11 +298,11 @@ export default function Dashboard() {
         )}
 
         {/* Column 2: Chat/Mail Content */}
-        <div className="flex-1 flex overflow-hidden relative z-0">
+        <div className="flex-1 min-w-0 flex overflow-hidden relative z-0">
           {activeTab === "chats" ? (
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 min-w-0 flex overflow-hidden">
               {(!isMobile || currentView === "chat") && (
-                <div className="flex-1 flex flex-col relative">
+                <div className="flex-1 min-w-0 flex flex-col relative">
                   <ChatWidget 
                     isMobile={isMobile} 
                     onBack={() => {

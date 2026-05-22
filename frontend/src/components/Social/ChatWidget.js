@@ -7,6 +7,7 @@ import {
   MoreVertical, Phone, Video, Search,
   Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail, Loader2, Download
 } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 
 export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) => {
   const { user } = useContext(AuthContext);
@@ -16,6 +17,26 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [downloadingFiles, setDownloadingFiles] = useState({});
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  const handleEmojiClick = (emojiData) => {
+    setMessageText(prev => prev + emojiData.emoji);
+  };
 
   const handleDownload = async (fileUrl, fileName) => {
     const resolvedUrl = getAttachmentUrl(fileUrl);
@@ -131,7 +152,7 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
   }, [selectedChat, messages]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-whatsapp-pattern relative">
+    <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-whatsapp-pattern relative">
       {/* Active Chat Header */}
       <header className="flex-shrink-0 h-16 bg-[#f0f2f5] border-b border-slate-200 flex items-center justify-between px-4 z-10">
         <div className="flex items-center gap-3 cursor-pointer overflow-hidden">
@@ -299,10 +320,31 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Emoji Picker Popover */}
+      {showEmojiPicker && (
+        <div 
+          ref={emojiPickerRef}
+          className="absolute bottom-[72px] left-4 z-50 shadow-2xl rounded-2xl overflow-hidden bg-white max-w-[calc(100vw-32px)] border border-slate-200/50"
+        >
+          <EmojiPicker 
+            onEmojiClick={handleEmojiClick} 
+            width={isMobile ? "100%" : 350} 
+            height={350} 
+            previewConfig={{ showPreview: false }}
+          />
+        </div>
+      )}
+
       {/* Bottom Input Bar */}
       <footer className="flex-shrink-0 bg-[#f0f2f5] p-3 flex items-center gap-2 z-10 border-t border-slate-200">
         <div className="flex items-center gap-1">
-          <button type="button" className="p-2 text-slate-500 hover:text-slate-700 rounded-full transition"><Smile size={24} /></button>
+          <button 
+            type="button" 
+            onClick={() => setShowEmojiPicker(prev => !prev)}
+            className={`p-2 rounded-full transition ${showEmojiPicker ? "text-[#075E54] bg-slate-200" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}
+          >
+            <Smile size={24} />
+          </button>
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -319,7 +361,7 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
           </button>
         </div>
         <form 
-          className="flex-1 flex gap-2 items-center"
+          className="flex-1 min-w-0 flex gap-2 items-center"
           onSubmit={(e) => {
             e.preventDefault();
             if (messageText.trim()) {
@@ -333,7 +375,7 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Type a message"
-            className="flex-1 px-4 py-2 text-sm bg-white text-slate-800 rounded-full focus:outline-none placeholder:text-slate-400 shadow-sm"
+            className="flex-1 min-w-0 px-4 py-2 text-sm bg-white text-slate-800 rounded-full focus:outline-none placeholder:text-slate-400 shadow-sm"
           />
           <button 
             type="submit"
