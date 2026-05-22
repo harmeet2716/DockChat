@@ -76,7 +76,13 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/mail", mailRoutes);
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  setHeaders: (res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+}));
 app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
 
 // Global Error Handler

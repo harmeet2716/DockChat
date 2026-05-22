@@ -1,5 +1,6 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
+const Message = require("../models/Message");
 
 const accessChat = async (req, res) => {
   const { userId } = req.body;
@@ -24,7 +25,13 @@ const accessChat = async (req, res) => {
   });
 
   if (isChat.length > 0) {
-    res.send(isChat[0]);
+    const chat = isChat[0];
+    const unreadCount = await Message.countDocuments({
+      chat: chat._id,
+      sender: { $ne: req.user._id },
+      status: { $ne: "read" }
+    });
+    res.send({ ...chat.toObject(), unreadCount });
   } else {
     var chatData = {
       chatName: "sender",
@@ -57,7 +64,19 @@ const fetchChats = async (req, res) => {
           path: "latestMessage.sender",
           select: "name profilePic email",
         });
-        res.status(200).send(results);
+
+        const chatsWithUnread = await Promise.all(
+          results.map(async (chat) => {
+            const unreadCount = await Message.countDocuments({
+              chat: chat._id,
+              sender: { $ne: req.user._id },
+              status: { $ne: "read" }
+            });
+            return { ...chat.toObject(), unreadCount };
+          })
+        );
+
+        res.status(200).send(chatsWithUnread);
       });
   } catch (error) {
     res.status(400).json({ message: error.message });

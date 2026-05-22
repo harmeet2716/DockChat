@@ -4,7 +4,7 @@ import io from "socket.io-client";
 
 export const ChatContext = createContext();
 
-const ENDPOINT = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+const ENDPOINT = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
 let socket;
 
 export const ChatProvider = ({ children }) => {
@@ -61,6 +61,11 @@ export const ChatProvider = ({ children }) => {
   // Mark as read when chat is selected
   useEffect(() => {
     if (selectedChat && user && socket) {
+      // Locally reset unreadCount of the selected chat to 0 immediately for premium UX
+      setChats(prevChats => prevChats.map(c => 
+        c._id === selectedChat._id ? { ...c, unreadCount: 0 } : c
+      ));
+
       const otherUser = selectedChat.users.find(u => u._id !== user._id);
       if (otherUser) {
         socket.emit("message read", {
@@ -97,12 +102,22 @@ export const ChatProvider = ({ children }) => {
           fetchChats();
         } else {
           setMessages((prev) => [...prev, newMessageReceived]);
-          // Notify sender it was delivered
-          socket.emit("message delivered", {
-            messageId: newMessageReceived._id,
+          
+          // Notify sender it was read immediately
+          socket.emit("message read", {
             chatId: newMessageReceived.chat._id,
             senderId: newMessageReceived.sender._id
           });
+          
+          // Also mark as read on the backend
+          fetch(`${ENDPOINT}/api/message/markAsRead`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user.token}`,
+            },
+            body: JSON.stringify({ chatId: newMessageReceived.chat._id }),
+          }).catch((err) => console.error("Mark as read error:", err));
         }
       });
 

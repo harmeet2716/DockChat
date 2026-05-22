@@ -22,7 +22,7 @@ export function SetupProfile() {
     formData.append("file", file);
 
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
       const res = await fetch(`${backendUrl}/api/upload`, {
         method: "POST",
         headers: {

@@ -2,6 +2,10 @@ import { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
+const getBackendUrl = () => {
+  return process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUser = async (token) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/me`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -59,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   const verifyOTP = async (phoneNumber, otp) => {
     try {
       // Sync with backend to get JWT
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/verify-otp`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber, isMock: true }),
@@ -78,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/register`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -96,7 +100,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithPassword = async (identity, password) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/login`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identity, password }),
@@ -120,7 +124,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("dockchat_user", JSON.stringify(optimisticUser));
 
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = getBackendUrl();
       const res = await fetch(`${backendUrl}/api/auth/profile`, {
         method: "PATCH",
         headers: { 
@@ -153,7 +157,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyEmail = async (email, otp) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/verify-email`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -167,7 +171,7 @@ export const AuthProvider = ({ children }) => {
 
   const resendEmailOTP = async (email) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/resend-email-otp`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/resend-email-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -181,7 +185,7 @@ export const AuthProvider = ({ children }) => {
 
   const toggleFollow = async (targetUserId) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/follow`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/follow`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -200,7 +204,7 @@ export const AuthProvider = ({ children }) => {
 
   const getSuggestedUsers = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/auth/suggested`, {
+      const res = await fetch(`${getBackendUrl()}/api/auth/suggested`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       return await res.json();

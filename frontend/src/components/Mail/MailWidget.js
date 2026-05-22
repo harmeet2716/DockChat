@@ -35,7 +35,7 @@ export const MailWidget = () => {
 
   const getAttachmentUrl = (url) => {
     if (!url) return "";
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
     
     if (url.startsWith("/")) {
       return `${backendUrl}${url}`;
@@ -90,7 +90,7 @@ export const MailWidget = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
       const res = await fetch(`${backendUrl}/api/upload`, {
         method: "POST",
         headers: {
@@ -120,7 +120,7 @@ export const MailWidget = () => {
     if (!to || !subject || !composeBody) return;
     setLoading(true);
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
       const res = await fetch(`${backendUrl}/api/mail`, {
         method: "POST",
         headers: {
@@ -152,7 +152,7 @@ export const MailWidget = () => {
   const fetchMails = async () => {
     setLoading(true);
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
       const res = await fetch(`${backendUrl}/api/mail?folder=${folder}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });

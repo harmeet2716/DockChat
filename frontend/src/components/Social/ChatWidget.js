@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Smile, Paperclip, Mic, Send, 
   MoreVertical, Phone, Video, Search,
-  Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail, Loader2
+  Check, CheckCheck, ChevronLeft, Info, MessageCircle, Mail, Loader2, Download
 } from "lucide-react";
 
 export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) => {
@@ -15,10 +15,36 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [downloadingFiles, setDownloadingFiles] = useState({});
+
+  const handleDownload = async (fileUrl, fileName) => {
+    const resolvedUrl = getAttachmentUrl(fileUrl);
+    setDownloadingFiles(prev => ({ ...prev, [fileUrl]: true }));
+    try {
+      const res = await fetch(resolvedUrl, {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error("Failed to download file");
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Error during download:", err);
+      window.open(resolvedUrl, "_blank");
+    } finally {
+      setDownloadingFiles(prev => ({ ...prev, [fileUrl]: false }));
+    }
+  };
 
   const getAttachmentUrl = (url) => {
     if (!url) return "";
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
     if (url.startsWith("/")) {
       return `${backendUrl}${url}`;
     }
@@ -43,7 +69,7 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
       const formData = new FormData();
       formData.append("file", file);
 
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
       const res = await fetch(`${backendUrl}/api/upload`, {
         method: "POST",
         headers: {
@@ -198,37 +224,60 @@ export const ChatWidget = ({ isMobile, onBack, onShowInfo, onNavigateToMail }) =
                   }`}></div>
                   
                   {msg.messageType === "image" && msg.mediaUrl ? (
-                    <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 shadow-sm bg-slate-50">
+                    <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 shadow-sm bg-slate-50 relative group/img">
                       <img 
                         src={getAttachmentUrl(msg.mediaUrl)} 
                         alt={msg.content} 
                         className="w-full h-auto object-cover max-h-60 cursor-zoom-in hover:opacity-95 transition" 
                         onClick={() => window.open(getAttachmentUrl(msg.mediaUrl), '_blank')} 
                       />
+                      <button 
+                        onClick={() => handleDownload(msg.mediaUrl, msg.content || "image.png")}
+                        className="absolute bottom-2 right-2 p-2 bg-white/95 text-slate-800 rounded-lg hover:bg-white hover:scale-105 active:scale-95 transition shadow-sm border border-slate-200/50 flex items-center justify-center"
+                        disabled={downloadingFiles[msg.mediaUrl]}
+                      >
+                        {downloadingFiles[msg.mediaUrl] ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#075E54]" /> : <Download size={14} />}
+                      </button>
                     </div>
                   ) : msg.messageType === "video" && msg.mediaUrl ? (
-                    <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 bg-slate-900 shadow-sm">
+                    <div className="mb-1 max-w-sm rounded-lg overflow-hidden border border-slate-100 bg-slate-900 shadow-sm relative group/vid">
                       <video src={getAttachmentUrl(msg.mediaUrl)} controls className="w-full max-h-60" />
+                      <button 
+                        onClick={() => handleDownload(msg.mediaUrl, msg.content || "video.mp4")}
+                        className="absolute top-2 right-2 p-2 bg-white/90 text-slate-800 rounded-lg hover:bg-white hover:scale-105 active:scale-95 transition shadow-sm border border-slate-200/50 flex items-center justify-center z-10"
+                        disabled={downloadingFiles[msg.mediaUrl]}
+                      >
+                        {downloadingFiles[msg.mediaUrl] ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#075E54]" /> : <Download size={14} />}
+                      </button>
                     </div>
                   ) : msg.messageType === "audio" && msg.mediaUrl ? (
-                    <div className="mb-1 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 p-2 shadow-sm flex items-center gap-2 max-w-xs">
+                    <div className="mb-1 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 p-2 shadow-sm flex items-center gap-2 max-w-xs relative">
                       <audio src={getAttachmentUrl(msg.mediaUrl)} controls className="w-full scale-90" />
+                      <button 
+                        onClick={() => handleDownload(msg.mediaUrl, msg.content || "audio.mp3")}
+                        className="p-2 bg-white text-slate-800 rounded-lg hover:bg-slate-100 hover:scale-105 active:scale-95 transition shadow-sm border border-slate-200/50 flex items-center justify-center shrink-0"
+                        disabled={downloadingFiles[msg.mediaUrl]}
+                      >
+                        {downloadingFiles[msg.mediaUrl] ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#075E54]" /> : <Download size={14} />}
+                      </button>
                     </div>
                   ) : msg.messageType === "file" && msg.mediaUrl ? (
-                    <a 
-                      href={getAttachmentUrl(msg.mediaUrl)} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="mb-1 flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/60 transition max-w-xs text-slate-800 decoration-none no-underline block"
-                    >
+                    <div className="mb-1 flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/60 transition max-w-xs text-slate-800 decoration-none no-underline block">
                       <div className="w-10 h-10 rounded-lg bg-[#075E54] text-white flex items-center justify-center shrink-0">
                         <Paperclip size={20} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold truncate pr-1 text-slate-800">{msg.content || "Attachment"}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">Click to open / download</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Click download icon to save</p>
                       </div>
-                    </a>
+                      <button 
+                        onClick={() => handleDownload(msg.mediaUrl, msg.content || "attachment.bin")}
+                        className="p-2 bg-white text-slate-800 rounded-lg hover:bg-slate-100 hover:scale-105 active:scale-95 transition shadow-sm border border-slate-200/50 flex items-center justify-center shrink-0"
+                        disabled={downloadingFiles[msg.mediaUrl]}
+                      >
+                        {downloadingFiles[msg.mediaUrl] ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#075E54]" /> : <Download size={14} />}
+                      </button>
+                    </div>
                   ) : (
                     <p className="pr-10">{msg.content}</p>
                   )}

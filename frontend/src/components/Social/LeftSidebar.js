@@ -35,7 +35,7 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
 
   const handleAccessChat = async (targetUserId) => {
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
       const res = await fetch(`${backendUrl}/api/chat`, {
         method: "POST",
         headers: {
@@ -154,9 +154,14 @@ export const LeftSidebar = ({ activeTab, onSelectChat }) => {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-slate-500 truncate flex-1 pr-2">
                       {chat.latestMessage ? chat.latestMessage.content : "Tap to start chatting"}
                     </p>
+                    {chat.unreadCount > 0 && selectedChat?._id !== chat._id && (
+                      <span className="flex-shrink-0 min-w-[20px] h-5 bg-[#25D366] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5 shadow-sm">
+                        {chat.unreadCount}
+                      </span>
+                    )}
                   </div>
                 </div>
               </motion.button>
