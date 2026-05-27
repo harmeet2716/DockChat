@@ -15,6 +15,7 @@ services:
       # Optional: Mount the host's Docker client binary inside the container
       - /usr/bin/docker:/usr/bin/docker
     restart: unless-stopped
+    
 
 volumes:
   jenkins_home:
